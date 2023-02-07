@@ -42,11 +42,22 @@ public class Scanner implements IScanner {
                     boolean checkLet = isLetter(ch);
                     boolean isIdent = isIdentStart(ch);
                     boolean isOp = isOper(ch);
+                    if(ch == 0) {
+                        return new Token(Kind.EOF, pos, 1, inputChars);
+                    }
                     if(isIdent == true) {
-                        return new Token(Kind.IDENT, pos, index, inputChars);
+                        state = State.IN_INDENT;
+                        continue;
                     }
                 }
-                case IN_INDENT -> {}
+                case IN_INDENT -> {
+                    int counter = 0;
+                    while(isIdentStart(index) || isDigit(index)) {
+                        pos++;
+                        counter++;
+                    }
+                    return new Token(Kind.IDENT, pos, counter, inputChars);
+                }
                 case IN_NUM_LIT -> {}
                 case IN_STRING_LIT -> {}
                 case IN_RESERVED -> {}
