@@ -1,5 +1,7 @@
 package edu.ufl.cise.plcsp23;
 
+import java.util.Arrays;
+
 public class Token implements IToken {
     final Kind kind;
     final int pos;
@@ -21,7 +23,7 @@ public class Token implements IToken {
 
     @Override
     public String getTokenString() {
-        return new String(this.source);
+		return new String(Arrays.copyOfRange(source, pos, length));
     }
 
     @Override
