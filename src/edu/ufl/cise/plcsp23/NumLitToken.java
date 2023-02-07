@@ -17,8 +17,7 @@ public class NumLitToken implements INumLitToken{
         this.source = source_;
 	}
     public int getValue() {
-		int ooga = Integer.parseInt(getTokenString());
-        return ooga;
+        return Integer.parseInt(getTokenString());
     };
 
 

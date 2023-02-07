@@ -112,7 +112,13 @@ public class Scanner implements IScanner {
                         ch = inputChars[pos];
                         counter++;
                     }
-                    return new NumLitToken(originalIndex, counter, inputChars);
+                    NumLitToken token = new NumLitToken(originalIndex, counter, inputChars);
+                    try {
+                        Integer.parseInt(token.getTokenString());
+                    } catch (Exception e) {
+                        throw new LexicalException("uhh");
+                    }
+                    return token;
                 }
                 case IN_STRING_LIT -> {}
                 case IN_RESERVED -> {}
