@@ -76,6 +76,8 @@ public class Scanner implements IScanner {
                     if(isWhite)
                     {
                         pos++;
+                        ch = inputChars[pos];
+                        state = State.START;
                         break;
                     }
                     if(isIdent == true) {
@@ -84,28 +86,33 @@ public class Scanner implements IScanner {
                     }
                     if (ch == '0') {
                         pos++;
+                        ch = inputChars[pos];
                         return new NumLitToken(pos-1, 1, inputChars);
                     }
                     if (checkDig == true) {
                         state = State.IN_NUM_LIT;
                         continue;
                     }
+                    return new Token(Kind.EOF, pos, 1, inputChars);
                 }
                 case IN_INDENT -> {
                     int counter = 0;
                     while(isIdentStart(ch) || isDigit(ch)) {
                         pos++;
+                        ch = inputChars[pos];
                         counter++;
                     }
                     return new Token(Kind.IDENT, pos, counter, inputChars);
                 }
                 case IN_NUM_LIT -> {
                     int counter = 0;
-                    while(isDigit(ch)) {
+                    int originalIndex = pos;
+                    while(ch != 0 && isDigit(ch) && (inputChars[pos] != 0)) {
                         pos++;
+                        ch = inputChars[pos];
                         counter++;
                     }
-                    return new Token(Kind.NUM_LIT, pos, counter, inputChars);
+                    return new NumLitToken(originalIndex, counter, inputChars);
                 }
                 case IN_STRING_LIT -> {}
                 case IN_RESERVED -> {}
@@ -128,8 +135,7 @@ public class Scanner implements IScanner {
      }
      private boolean isWhiteSpace(char ch) {
         switch(ch) {
-            case ' ', '\b', '\t', '\n', '\r', '\"', '\f' -> {
-                return true;}
+            case ' ', '\b', '\t', '\n', '\r', '\"', '\f' -> {return true;}
             default -> {return false;}
         }
      }

@@ -45,6 +45,6 @@ public class StringLitToken implements IStringLitToken{
 	 * @return
 	 */
 	public String getTokenString() {
-		return new String(Arrays.copyOfRange(source, pos, length));
+		return new String(Arrays.copyOfRange(source, pos, pos + length));
 	}
 }

@@ -2,6 +2,7 @@ package edu.ufl.cise.plcsp23;
 
 import java.util.Arrays;
 
+
 public class NumLitToken implements INumLitToken{
     final Kind kind;
     final int pos;
@@ -16,8 +17,11 @@ public class NumLitToken implements INumLitToken{
         this.source = source_;
 	}
     public int getValue() {
-        return Integer.parseInt(getTokenString());
+		int ooga = Integer.parseInt(getTokenString());
+        return ooga;
     };
+
+
     /**
 	 * Returns a SourceLocation record containing the line and column number of this token.
 	 * Both counts start numbering at 1.
@@ -42,7 +46,7 @@ public class NumLitToken implements INumLitToken{
 	 * @return
 	 */
 	public String getTokenString() {
-		return new String(Arrays.copyOfRange(source, pos, length));
+		return new String(Arrays.copyOfRange(source, pos, pos + length));
     };
 
 }
