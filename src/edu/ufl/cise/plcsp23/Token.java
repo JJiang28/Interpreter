@@ -7,14 +7,17 @@ public class Token implements IToken {
     final int pos;
     final int length;
     final char[] source;
+    SourceLocation position;
 
-    public Token(Kind kind_, int pos_, int length_, char[] source_) {
+    public Token(Kind kind_, int pos_, int length_, char[] source_, int line, int column) {
         super();
         this.kind = kind_;
         this.pos = pos_;
         this.length = length_;
         this.source = source_;
+        position = new SourceLocation(line, column);
     }
+
 
     @Override
     public Kind getKind() {
@@ -23,11 +26,11 @@ public class Token implements IToken {
 
     @Override
     public String getTokenString() {
-		return new String(Arrays.copyOfRange(source, pos, length));
+		return new String(Arrays.copyOfRange(source, pos, pos + length));
     }
 
     @Override
     public SourceLocation getSourceLocation() {
-        return this.getSourceLocation();
+        return this.position;
     }
 }
