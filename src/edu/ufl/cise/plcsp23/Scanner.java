@@ -119,31 +119,26 @@ public class Scanner implements IScanner {
                         state = State.START;
                         continue;
                     }
-                //     if(reservedWords.get(ch) != null) {
-                //         Kind k = reservedWords.get(ch);
-                //         column++;
-                //         return new Token(k, pos, 1, inputChars, line, column-1);
-                //    }
-                    if (ch == 'x') {
-                        pos++;
-                        ch = inputChars[pos];
-                        column++;
-                        state = State.START;
-                        return new Token(Kind.RES_x, pos-1, 1, inputChars, line, column-1);
-                    }
-                    if (ch == 'y') {
-                        pos++;
-                        ch = inputChars[pos];
-                        column++;
-                        state = State.START;
-                        return new Token(Kind.RES_y, pos-1, 1, inputChars, line, column-1);
-                    }
-                    if (ch == 'Y') {
-                        pos++;
-                        ch = inputChars[pos];
-                        column++;
-                        return new Token(Kind.RES_Y, pos-1, 1, inputChars, line, column-1);
-                    }
+                    // if (ch == 'x') {
+                    //     pos++;
+                    //     ch = inputChars[pos];
+                    //     column++;
+                    //     state = State.START;
+                    //     return new Token(Kind.RES_x, pos-1, 1, inputChars, line, column-1);
+                    // }
+                    // if (ch == 'y') {
+                    //     pos++;
+                    //     ch = inputChars[pos];
+                    //     column++;
+                    //     state = State.START;
+                    //     return new Token(Kind.RES_y, pos-1, 1, inputChars, line, column-1);
+                    // }
+                    // if (ch == 'Y') {
+                    //     pos++;
+                    //     ch = inputChars[pos];
+                    //     column++;
+                    //     return new Token(Kind.RES_Y, pos-1, 1, inputChars, line, column-1);
+                    // }
                     if(isWhite)
                     {
                         pos++;
@@ -191,12 +186,12 @@ public class Scanner implements IScanner {
                         pos++;
                         ch = inputChars[pos];
                         counter++;
-                        possible = possible + ch;
                         column++;
                         if(reservedWords.containsKey(possible)) {
                             Kind k = reservedWords.get(possible);
                             return new Token(k, originalIndex, counter, inputChars, line, column-counter);
                         }
+                        possible = possible + ch;
                     }
                     return new Token(Kind.IDENT, originalIndex, counter, inputChars, line, column - counter);
                 }
