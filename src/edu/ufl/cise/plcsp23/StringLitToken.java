@@ -8,13 +8,15 @@ public class StringLitToken implements IStringLitToken{
     final int pos;
     final int length;
     final char[] source;
+	SourceLocation position;
 
-	public StringLitToken(int pos_, int length_, char[] source_) {
+	public StringLitToken(int pos_, int length_, char[] source_, int line, int column) {
         super();
 		this.kind = Kind.STRING_LIT;
         this.pos = pos_;
         this.length = length_;
         this.source = source_;
+		position = new SourceLocation(line, column);
 	}
 
     public String getValue() {
@@ -28,7 +30,7 @@ public class StringLitToken implements IStringLitToken{
 	 * @return Line number and column of this token.  
 	 */
 	public SourceLocation getSourceLocation() {
-		return this.getSourceLocation();
+		return this.position;
 	}
 	
 	/** Returns the kind of this Token

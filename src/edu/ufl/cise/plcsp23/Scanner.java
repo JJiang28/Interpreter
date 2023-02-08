@@ -119,26 +119,12 @@ public class Scanner implements IScanner {
                         state = State.START;
                         continue;
                     }
-                    // if (ch == 'x') {
-                    //     pos++;
-                    //     ch = inputChars[pos];
-                    //     column++;
-                    //     state = State.START;
-                    //     return new Token(Kind.RES_x, pos-1, 1, inputChars, line, column-1);
-                    // }
-                    // if (ch == 'y') {
-                    //     pos++;
-                    //     ch = inputChars[pos];
-                    //     column++;
-                    //     state = State.START;
-                    //     return new Token(Kind.RES_y, pos-1, 1, inputChars, line, column-1);
-                    // }
-                    // if (ch == 'Y') {
-                    //     pos++;
-                    //     ch = inputChars[pos];
-                    //     column++;
-                    //     return new Token(Kind.RES_Y, pos-1, 1, inputChars, line, column-1);
-                    // }
+
+                    if(ch == '"') {
+                        state = State.IN_STRING_LIT;
+                        continue;
+                    }
+                  
                     if(isWhite)
                     {
                         pos++;
@@ -213,7 +199,21 @@ public class Scanner implements IScanner {
                     }
                     return token;
                 }
-                case IN_STRING_LIT -> {}
+                case IN_STRING_LIT -> {
+                    int counter = 1;
+                    int originalIndex = pos;
+                    ch = inputChars[pos+1];
+                    if (ch == '\t') {
+                        inputChars[pos] = '\'';
+                    }
+                    while(ch != '"') {
+                        pos++;
+                        ch = inputChars[pos];
+                        counter++;
+                        column++;
+                    }
+                    return new StringLitToken(originalIndex, counter, inputChars, line, column-counter+1);
+                }
                 case IN_RESERVED -> {}
                 case IN_OPERATOR -> {
                     if (ch == '=' && inputChars[pos+1] == '=') {
@@ -360,7 +360,7 @@ public class Scanner implements IScanner {
      }
      private boolean isWhiteSpace(char ch) {
         switch(ch) {
-            case ' ', '\b', '\t', '\n', '\r', '\"', '\f' -> {return true;}
+            case ' ', '\b', '\t', '\n', '\r', '\f' -> {return true;}
             default -> {return false;}
         }
      }
