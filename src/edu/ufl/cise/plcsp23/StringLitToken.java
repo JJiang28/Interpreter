@@ -20,8 +20,27 @@ public class StringLitToken implements IStringLitToken{
 	}
 
     public String getValue() {
-		String temp = this.getTokenString();
-        return temp.substring(1, temp.length()-1);
+		String lastOne = "";
+		for(int i = pos+1; i <pos+length-1;i++) {
+			String temp = "";
+			if(source[i] == '\\') {
+				switch (source[i+1]) {
+					case 'b' -> temp += '\b';
+					case 'n' -> temp += '\n';
+					case '"' -> {
+						temp+= '\"';
+					}
+					case 't' -> temp += '\t';
+					case 'r' -> temp += '\r';
+				}
+				lastOne += temp;
+				i++;
+			}
+			else {
+				lastOne += source[i];
+			}
+		}
+		return lastOne;
     }
     /**
 	 * Returns a SourceLocation record containing the line and column number of this token.

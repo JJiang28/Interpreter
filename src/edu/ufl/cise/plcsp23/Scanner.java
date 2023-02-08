@@ -114,7 +114,6 @@ public class Scanner implements IScanner {
                         while(ch != 10) {
                             pos++;
                             ch = inputChars[pos];
-                            System.out.println("comment running");
                         }
                         state = State.START;
                         continue;
@@ -131,7 +130,6 @@ public class Scanner implements IScanner {
                         ch = inputChars[pos];
                         state = State.START;
                         column++; 
-                        System.out.println("whitespace ran");
                         break;
                     }
 
@@ -143,7 +141,7 @@ public class Scanner implements IScanner {
                         pos++;
                         ch = inputChars[pos];
                         column++;
-                        return new NumLitToken(pos-1, 1, inputChars);
+                        return new NumLitToken(pos-1, 1, inputChars, line, column);
                     }
                     if (checkDig == true) {
                         state = State.IN_NUM_LIT;
@@ -191,7 +189,7 @@ public class Scanner implements IScanner {
                         ch = inputChars[pos];
                         counter++;
                     }
-                    NumLitToken token = new NumLitToken(originalIndex, counter, inputChars);
+                    NumLitToken token = new NumLitToken(originalIndex, counter, inputChars, line, column);
                     try {
                         Integer.parseInt(token.getTokenString());
                     } catch (Exception e) {
@@ -203,8 +201,12 @@ public class Scanner implements IScanner {
                     int counter = 1;
                     int originalIndex = pos;
                     ch = inputChars[pos+1];
-                    if (ch == '\t') {
-                        inputChars[pos] = '\'';
+                    if (ch == '\n' || ch == '\r') {
+                        throw new LexicalException("dumb");
+                    }
+                    char c = inputChars[pos+2];
+                    if (ch == '\\' && !checkWhiteSpace(c)) {
+                        throw new LexicalException("asodjqw");
                     }
                     while(ch != '"') {
                         pos++;
@@ -212,7 +214,14 @@ public class Scanner implements IScanner {
                         counter++;
                         column++;
                     }
-                    return new StringLitToken(originalIndex, counter, inputChars, line, column-counter+1);
+                    if (inputChars[pos-1] == '\\') {
+                        pos++;
+                        ch = inputChars[pos];
+                    }
+  
+                    pos++;
+                    ch = inputChars[pos];
+                    return new StringLitToken(originalIndex, pos-originalIndex, inputChars, line, column-counter+1);
                 }
                 case IN_RESERVED -> {}
                 case IN_OPERATOR -> {
@@ -364,9 +373,11 @@ public class Scanner implements IScanner {
             default -> {return false;}
         }
      }
-
-     private void error(String message) throws LexicalException{
-        throw new LexicalException("Error at pos " + pos + ": " + message); 
+     private boolean checkWhiteSpace(char c) {
+        switch(c) {
+            case 'b', 't', 'n', 'r', 'f', '"' -> {return true;}
+            default -> {return false;}
+        }
      }
      private boolean isOper(char c) {
         switch(c) {
