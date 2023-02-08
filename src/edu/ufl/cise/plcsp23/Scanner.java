@@ -10,6 +10,7 @@ public class Scanner implements IScanner {
     int pos;
     char ch;
     HashMap<String, Kind> reservedWords = new HashMap<String, Kind>();
+    HashMap<String, Kind> ops = new HashMap<String, Kind>();
 
     public Scanner (String input) {
         this.input = input;
@@ -42,6 +43,34 @@ public class Scanner implements IScanner {
         reservedWords.put("atan", Kind.RES_atan);
         reservedWords.put("if", Kind.RES_if);
         reservedWords.put("while", Kind.RES_while);
+        ops.put(".", Kind.DOT);
+        ops.put(",", Kind.COMMA);
+        ops.put("?", Kind.QUESTION);
+        ops.put(":", Kind.COLON);
+        ops.put("(", Kind.LPAREN);
+        ops.put(")", Kind.RPAREN);
+        ops.put("<", Kind.LT);
+        ops.put(">", Kind.GT);
+        ops.put("[", Kind.LSQUARE);
+        ops.put("]", Kind.RSQUARE);
+        ops.put("{", Kind.LCURLY);
+        ops.put("}", Kind.RCURLY);
+        ops.put("=", Kind.ASSIGN);
+        ops.put("==", Kind.EQ);
+        ops.put("<->", Kind.EXCHANGE);
+        ops.put("<=", Kind.LE);
+        ops.put(">=", Kind.GE);
+        ops.put("!", Kind.BANG);
+        ops.put("&", Kind.BITAND);
+        ops.put("&&", Kind.AND);
+        ops.put("|", Kind.BITOR);
+        ops.put("||", Kind.OR);
+        ops.put("+", Kind.PLUS);
+        ops.put("-", Kind.MINUS);
+        ops.put("*", Kind.TIMES);
+        ops.put("**", Kind.EXP);
+        ops.put("/", Kind.DIV);
+        ops.put("%", Kind.MOD);
     }
 
     @Override
@@ -93,6 +122,14 @@ public class Scanner implements IScanner {
                         state = State.IN_NUM_LIT;
                         continue;
                     }
+                    if (ch == '"') {
+                        state = State.IN_STRING_LIT;
+                        continue;
+                    }
+                    if (isOp) {
+                        state = State.IN_OPERATOR;
+                        continue;
+                    }
                     return new Token(Kind.EOF, pos, 1, inputChars);
                 }
                 case IN_INDENT -> {
@@ -120,9 +157,138 @@ public class Scanner implements IScanner {
                     }
                     return token;
                 }
-                case IN_STRING_LIT -> {}
+                case IN_STRING_LIT -> {
+                    int counter = 0;
+                    int originalIndex = pos;
+                    while(ch != '"') {
+
+                    }
+                }
                 case IN_RESERVED -> {}
-                case IN_OPERATOR -> {}
+                case IN_OPERATOR -> {
+                    if (ch == '=' && inputChars[pos+1] == '=') {
+                        pos +=2;
+                        ch = inputChars[pos];
+                        return new Token(Kind.EQ, pos-2, 2, inputChars);
+                    }
+                    if (ch == '|' && inputChars[pos+1] == '|') {
+                        pos +=2;
+                        ch = inputChars[pos];
+                        return new Token(Kind.OR, pos-2, 2, inputChars);
+                    }
+                    if (ch == '&' && inputChars[pos+1] == '&') {
+                        pos +=2;
+                        ch = inputChars[pos];
+                        return new Token(Kind.AND, pos-2, 2, inputChars);
+                    }
+                    if (ch == '*' && inputChars[pos+1] == '*') {
+                        pos +=2;
+                        ch = inputChars[pos];
+                        return new Token(Kind.EXP, pos-2, 2, inputChars);
+                    }
+                    if (ch == '>' && inputChars[pos+1] == '=') {
+                        pos +=2;
+                        ch = inputChars[pos];
+                        return new Token(Kind.GE, pos-2, 2, inputChars);
+                    }
+                    if (ch == '<') {
+                        if (inputChars[pos+1] == '=') {
+                            pos +=2;
+                            ch = inputChars[pos];
+                            return new Token(Kind.LE, pos-2, 2, inputChars);
+                        }
+                        if (inputChars[pos+1] == '-' && inputChars[pos+2] == '>') {
+                            pos +=3;
+                            ch = inputChars[pos];
+                            return new Token(Kind.EXCHANGE, pos-3, 3, inputChars);
+                        }
+                    }
+                    if (ch == '.') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.DOT, pos-1, 1, inputChars);
+                    }if (ch == ',') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.COMMA, pos-1, 1, inputChars);
+                    }if (ch == '?') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.QUESTION, pos-1, 1, inputChars);
+                    }if (ch == ':') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.COLON, pos-1, 1, inputChars);
+                    }if (ch == '(') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.LPAREN, pos-1, 1, inputChars);
+                    }if (ch == ')') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.RPAREN, pos-1, 1, inputChars);
+                    }if (ch == '<') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.LT, pos-1, 1, inputChars);
+                    }if (ch == '>') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.GT, pos-1, 1, inputChars);
+                    }if (ch == '[') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.LSQUARE, pos-1, 1, inputChars);
+                    }if (ch == ']') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.RSQUARE, pos-1, 1, inputChars);
+                    }if (ch == '{') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.LCURLY, pos-1, 1, inputChars);
+                    }if (ch == '}') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.RCURLY, pos-1, 1, inputChars);
+                    }if (ch == '=') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.ASSIGN, pos-1, 1, inputChars);
+                    }if (ch == '!') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.BANG, pos-1, 1, inputChars);
+                    }if (ch == '&') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.BITAND, pos-1, 1, inputChars);
+                    }if (ch == '|') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.BITOR, pos-1, 1, inputChars);
+                    }if (ch == '+') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.PLUS, pos-1, 1, inputChars);
+                    }if (ch == '-') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.MINUS, pos-1, 1, inputChars);
+                    }if (ch == '*') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.TIMES, pos-1, 1, inputChars);
+                    }if (ch == '/') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.DIV, pos-1, 1, inputChars);
+                    }if (ch == '%') {
+                        pos +=1;
+                        ch = inputChars[pos];
+                        return new Token(Kind.MOD, pos-1, 1, inputChars);
+                    }
+                }
                 default -> { throw new UnsupportedOperationException("Bug");}
             }
            
