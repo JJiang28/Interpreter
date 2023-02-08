@@ -175,7 +175,8 @@ public class Scanner implements IScanner {
                         state = State.IN_OPERATOR;
                         continue;
                     }
-                    return new Token(Kind.EOF, pos, 1, inputChars, line, column);
+                    throw new LexicalException("uhh");
+                    //return new Token(Kind.EOF, pos, 1, inputChars, line, column);
                 }
                 case IN_INDENT -> {
                     int counter = 0;
@@ -212,13 +213,7 @@ public class Scanner implements IScanner {
                     }
                     return token;
                 }
-                case IN_STRING_LIT -> {
-                    int counter = 0;
-                    int originalIndex = pos;
-                    while(ch != '"') {
-
-                    }
-                }
+                case IN_STRING_LIT -> {}
                 case IN_RESERVED -> {}
                 case IN_OPERATOR -> {
                     if (ch == '=' && inputChars[pos+1] == '=') {
@@ -252,10 +247,13 @@ public class Scanner implements IScanner {
                             ch = inputChars[pos];
                             return new Token(Kind.LE, pos-2, 2, inputChars, line, column);
                         }
-                        if (inputChars[pos+1] == '-' && inputChars[pos+2] == '>') {
-                            pos +=3;
-                            ch = inputChars[pos];
-                            return new Token(Kind.EXCHANGE, pos-3, 3, inputChars, line, column);
+                        if (inputChars[pos+1] == '-') {
+                            if (inputChars[pos+2] == '>') {
+                                pos +=3;
+                                ch = inputChars[pos];
+                                return new Token(Kind.EXCHANGE, pos-3, 3, inputChars, line, column);
+                            }
+                            throw new LexicalException("uhh");
                         }
                     }
                     if (ch == '.') {
@@ -344,7 +342,7 @@ public class Scanner implements IScanner {
                         return new Token(Kind.MOD, pos-1, 1, inputChars, line, column);
                     }
                 }
-                default -> { throw new UnsupportedOperationException("Bug");}
+                default -> { throw new LexicalException("Bug");}
             }
            
         }
