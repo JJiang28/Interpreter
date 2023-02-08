@@ -187,7 +187,7 @@ public class Scanner implements IScanner {
                         ch = inputChars[pos];
                         counter++;
                         column++;
-                        if(reservedWords.containsKey(possible)) {
+                        if(reservedWords.containsKey(possible) && isDigit(ch)== false && isIdentStart(ch)==false) {
                             Kind k = reservedWords.get(possible);
                             return new Token(k, originalIndex, counter, inputChars, line, column-counter);
                         }
