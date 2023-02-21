@@ -29,6 +29,7 @@ public class CompilerComponentFactory {
 			tokens.add(token);
 			token = temp.next();
 		}
+		tokens.add(token);
 		return new Parser(tokens);
 	}
 

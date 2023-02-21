@@ -25,16 +25,14 @@ public class Parser implements IParser {
 
     @Override
     public AST parse() throws PLCException {
-        if (tokenList.size() == 0) throw new SyntaxException("Empty string");
+        if (tokenList.size() == 1) throw new SyntaxException("Empty string");
         return expr();
     }
 
     private Expr expr() throws PLCException{
-        if (match(Kind.QUESTION)) {
+        if (match(Kind.RES_if)) 
             return conditional_expr();
-        } else {
-            return conditional_expr();
-        }
+        return or_expr();
     }
 
     private ConditionalExpr conditional_expr() throws PLCException {
@@ -51,7 +49,7 @@ public class Parser implements IParser {
         return new ConditionalExpr(firstToken, guard, trueCase, falseCase);
     }
 
-    private Expr or_expr() throws PLCException{
+    private Expr or_expr() throws PLCException {
         IToken firstToken = previous();
         Expr left = and_expr();
         while (match(Kind.OR, Kind.BITOR)) {
