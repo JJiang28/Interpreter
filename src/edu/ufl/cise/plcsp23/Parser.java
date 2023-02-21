@@ -35,7 +35,7 @@ public class Parser implements IParser {
         return or_expr();
     }
 
-    private ConditionalExpr conditional_expr() throws PLCException {
+    private Expr conditional_expr() throws PLCException {
         IToken firstToken = previous();
         Expr guard = expr();
         if (!match(Kind.QUESTION)) {
@@ -50,7 +50,7 @@ public class Parser implements IParser {
     }
 
     private Expr or_expr() throws PLCException {
-        IToken firstToken = previous();
+        IToken firstToken = peek();
         Expr left = and_expr();
         while (match(Kind.OR, Kind.BITOR)) {
             Kind op = previous().getKind();
@@ -61,7 +61,7 @@ public class Parser implements IParser {
     }
 
     private Expr and_expr() throws PLCException{
-        IToken firstToken = previous();
+        IToken firstToken = peek();
         Expr left = comparison_expr();
         while (match(Kind.AND, Kind.BITAND)) {
             Kind op = previous().getKind();
@@ -131,7 +131,7 @@ public class Parser implements IParser {
             match(Kind.RPAREN);
             return expr1;
         }
-        return null;
+        throw new SyntaxException("Invalid Syntax");
     }
 
     private boolean match(Kind... kinds) {
