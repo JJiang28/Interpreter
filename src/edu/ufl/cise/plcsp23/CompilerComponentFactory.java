@@ -10,6 +10,9 @@
 
 package edu.ufl.cise.plcsp23;
 import java.util.List;
+import java.util.ArrayList;
+
+import edu.ufl.cise.plcsp23.IToken.Kind;
 
 
 public class CompilerComponentFactory {
@@ -17,11 +20,18 @@ public class CompilerComponentFactory {
 		//Add statement to return an instance of your scanner
 		return new Scanner(input);
 	}
-	public static IParser makeAssignment2Parser(String input)
-			throws LexicalException {
+	public static IParser makeAssignment2Parser(String input) throws LexicalException {
 		//add code to create a scanner and parser and return the parser
 		Scanner temp = new Scanner(input);
-		List<IToken> tokens = temp.tokens;
+		List<IToken> tokens = new ArrayList<>();
+		IToken token = temp.next();
+		while (token.getKind() != Kind.EOF) {
+			tokens.add(token);
+			token = temp.next();
+		}
+		for (int i = 0; i < tokens.size(); i++){
+			System.out.println(tokens.get(i).getKind());
+		}
 		return new Parser(tokens);
 	}
 
