@@ -51,33 +51,39 @@ public class Parser implements IParser {
         return new ConditionalExpr(firstToken, guard, trueCase, falseCase);
     }
 
-    private BinaryExpr or_expr() {
+    private Expr or_expr() throws PLCException{
         IToken firstToken = previous();
-        BinaryExpr left = and_expr();
+        Expr left = and_expr();
         while (match(Kind.OR, Kind.BITOR)) {
             Kind op = previous().getKind();
-            BinaryExpr right = and_expr();
+            Expr right = and_expr();
             left = new BinaryExpr(firstToken, left, op, right);
         }
         return left;
     }
 
-    private BinaryExpr and_expr() {
+    private Expr and_expr() throws PLCException{
         IToken firstToken = previous();
-        BinaryExpr left = comparison_expr();
+        Expr left = comparison_expr();
         while (match(Kind.AND, Kind.BITAND)) {
             Kind op = previous().getKind();
-            BinaryExpr right = comparison_expr();
+            Expr right = comparison_expr();
             left = new BinaryExpr(firstToken, left, op, right);
         }
         return left;
     }
 
-    private BinaryExpr comparison_expr() {
-        return null;
+    private Expr comparison_expr() throws PLCException{
+        Expr e = powerExpr();
+        while (match(Kind.LT, Kind.GT, Kind.EQ, Kind.LE, Kind.GE)) {
+            IToken pExp = previous();
+            Expr right = powerExpr();
+            e = new BinaryExpr(e.firstToken, e, pExp.getKind(), right);
+        }
+        return e;
     }
     
-    private Expr powerExpr() {
+    private Expr powerExpr() throws PLCException{
         Expr e = additiveExpr();
         if (match(Kind.EXP)) {
             IToken operator = previous();
@@ -87,7 +93,7 @@ public class Parser implements IParser {
         return e;
     }
 
-    private Expr additiveExpr() {
+    private Expr additiveExpr() throws PLCException{
         Expr e = multiplicativeExpr();
         while (match(Kind.PLUS, Kind.MINUS)) {
             IToken mExp = previous();
@@ -97,7 +103,7 @@ public class Parser implements IParser {
         return e;
     }
 
-    private Expr multiplicativeExpr() {
+    private Expr multiplicativeExpr() throws PLCException {
         Expr e = unaryExpr();
         while (match(Kind.TIMES, Kind.DIV, Kind.MOD)) {
             IToken unaryOp = previous();
@@ -107,7 +113,7 @@ public class Parser implements IParser {
         return e;
     }
 
-    private Expr unaryExpr() {
+    private Expr unaryExpr() throws PLCException{
         if(match(Kind.BANG, Kind.MINUS, Kind.RES_sin, Kind.RES_cos, Kind.RES_atan)) {
             IToken unaryOp = previous();
             Expr e = unaryExpr();
@@ -116,12 +122,18 @@ public class Parser implements IParser {
         return primaryExpr();
     }
 
-    private Expr primaryExpr() {
+    private Expr primaryExpr() throws PLCException{
         if(match(Kind.STRING_LIT)) return new StringLitExpr(previous());
         if(match(Kind.NUM_LIT)) return new NumLitExpr(previous());
         if(match(Kind.IDENT)) return new IdentExpr(previous());
         if(match(Kind.RES_Z)) return new ZExpr(previous());
         if(match(Kind.RES_rand)) return new RandomExpr(previous());
+        if(match(Kind.LPAREN)) {
+            Expr expr1 = expr();
+            match(Kind.RPAREN);
+            return expr1;
+        }
+        return null;
     }
 
     private boolean match(Kind... kinds) {
