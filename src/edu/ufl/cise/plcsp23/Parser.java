@@ -39,11 +39,11 @@ public class Parser implements IParser {
         IToken firstToken = previous();
         Expr guard = expr();
         if (!match(Kind.QUESTION)) {
-            throw new PLCException("Invalid conditional expr");
+            throw new SyntaxException("Invalid conditional expr");
         }
         Expr trueCase = expr();
         if (!match(Kind.QUESTION)) {
-            throw new PLCException("Invalid conditional expr");
+            throw new SyntaxException("Invalid conditional expr");
         }
         Expr falseCase = expr();
         return new ConditionalExpr(firstToken, guard, trueCase, falseCase);
@@ -128,7 +128,9 @@ public class Parser implements IParser {
         if(match(Kind.RES_rand)) return new RandomExpr(previous());
         if(match(Kind.LPAREN)) {
             Expr expr1 = expr();
-            match(Kind.RPAREN);
+            if (!match(Kind.RPAREN)) {
+                throw new SyntaxException("Parentheses");
+            };
             return expr1;
         }
         throw new SyntaxException("Invalid Syntax");
