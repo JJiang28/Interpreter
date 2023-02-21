@@ -2,13 +2,15 @@ package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.ast.AST;
 import edu.ufl.cise.plcsp23.ast.BinaryExpr;
-import edu.ufl.cise.plcsp23.ast.ConditionalExpr;
 import edu.ufl.cise.plcsp23.ast.Expr;
+import edu.ufl.cise.plcsp23.ast.IdentExpr;
+import edu.ufl.cise.plcsp23.ast.NumLitExpr;
+import edu.ufl.cise.plcsp23.ast.RandomExpr;
+import edu.ufl.cise.plcsp23.ast.StringLitExpr;
+import edu.ufl.cise.plcsp23.ast.UnaryExpr;
+import edu.ufl.cise.plcsp23.ast.ZExpr;
+import edu.ufl.cise.plcsp23.ast.ConditionalExpr;
 import edu.ufl.cise.plcsp23.IToken.Kind;
-import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.Scanner;
-import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -74,10 +76,53 @@ public class Parser implements IParser {
     private BinaryExpr comparison_expr() {
         return null;
     }
+    
+    private Expr powerExpr() {
+        Expr e = additiveExpr();
+        if (match(Kind.EXP)) {
+            IToken operator = previous();
+            Expr right = powerExpr();
+            return new BinaryExpr(e.firstToken, e, operator.getKind(), right);
+        }
+        return e;
+    }
 
-    // private AST primaryExpr() {
-    //     if(match(Kind.STRING_LIT)) return new AST.
-    // }*/
+    private Expr additiveExpr() {
+        Expr e = multiplicativeExpr();
+        while (match(Kind.PLUS, Kind.MINUS)) {
+            IToken mExp = previous();
+            Expr right = multiplicativeExpr();
+            e = new BinaryExpr(e.firstToken, e, mExp.getKind(), right);
+        }
+        return e;
+    }
+
+    private Expr multiplicativeExpr() {
+        Expr e = unaryExpr();
+        while (match(Kind.TIMES, Kind.DIV, Kind.MOD)) {
+            IToken unaryOp = previous();
+            Expr right = unaryExpr();
+            e = new BinaryExpr(e.firstToken, e, unaryOp.getKind(), right);
+        }
+        return e;
+    }
+
+    private Expr unaryExpr() {
+        if(match(Kind.BANG, Kind.MINUS, Kind.RES_sin, Kind.RES_cos, Kind.RES_atan)) {
+            IToken unaryOp = previous();
+            Expr e = unaryExpr();
+            return new UnaryExpr(unaryOp, unaryOp.getKind(), e);
+        }
+        return primaryExpr();
+    }
+
+    private Expr primaryExpr() {
+        if(match(Kind.STRING_LIT)) return new StringLitExpr(previous());
+        if(match(Kind.NUM_LIT)) return new NumLitExpr(previous());
+        if(match(Kind.IDENT)) return new IdentExpr(previous());
+        if(match(Kind.RES_Z)) return new ZExpr(previous());
+        if(match(Kind.RES_rand)) return new RandomExpr(previous());
+    }
 
     private boolean match(Kind... kinds) {
         for (Kind k: kinds) {
