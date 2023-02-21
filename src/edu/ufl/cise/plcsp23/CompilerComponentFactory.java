@@ -10,10 +10,18 @@
 
 package edu.ufl.cise.plcsp23;
 
+
 public class CompilerComponentFactory {
 	public static IScanner makeScanner(String input) {
 		//Add statement to return an instance of your scanner
 		return new Scanner(input);
+	}
+	public static IParser makeAssignment2Parser(String input)
+			throws LexicalException {
+		//add code to create a scanner and parser and return the parser
+		Scanner temp = new Scanner(input);
+		IToken newToken = temp.next();
+		return new Parser(newToken);
 	}
 
 }
