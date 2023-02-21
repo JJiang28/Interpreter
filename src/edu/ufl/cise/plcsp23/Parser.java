@@ -1,6 +1,9 @@
 package edu.ufl.cise.plcsp23;
 
 import edu.ufl.cise.plcsp23.ast.AST;
+import edu.ufl.cise.plcsp23.ast.BinaryExpr;
+import edu.ufl.cise.plcsp23.ast.ConditionalExpr;
+import edu.ufl.cise.plcsp23.ast.Expr;
 import edu.ufl.cise.plcsp23.IToken.Kind;
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.Scanner;
@@ -20,12 +23,61 @@ public class Parser implements IParser {
 
     @Override
     public AST parse() throws PLCException {
-        throw new PLCException("hi");
+        if (tokenList.size() == 0) throw new SyntaxException("Empty string");
+        return expr();
+    }
+
+    private Expr expr() throws PLCException{
+        if (match(Kind.QUESTION)) {
+            return conditional_expr();
+        } else {
+            return conditional_expr();
+        }
+    }
+
+    private ConditionalExpr conditional_expr() throws PLCException {
+        IToken firstToken = previous();
+        Expr guard = expr();
+        if (!match(Kind.QUESTION)) {
+            throw new PLCException("Invalid conditional expr");
+        }
+        Expr trueCase = expr();
+        if (!match(Kind.QUESTION)) {
+            throw new PLCException("Invalid conditional expr");
+        }
+        Expr falseCase = expr();
+        return new ConditionalExpr(firstToken, guard, trueCase, falseCase);
+    }
+
+    private BinaryExpr or_expr() {
+        IToken firstToken = previous();
+        BinaryExpr left = and_expr();
+        while (match(Kind.OR, Kind.BITOR)) {
+            Kind op = previous().getKind();
+            BinaryExpr right = and_expr();
+            left = new BinaryExpr(firstToken, left, op, right);
+        }
+        return left;
+    }
+
+    private BinaryExpr and_expr() {
+        IToken firstToken = previous();
+        BinaryExpr left = comparison_expr();
+        while (match(Kind.AND, Kind.BITAND)) {
+            Kind op = previous().getKind();
+            BinaryExpr right = comparison_expr();
+            left = new BinaryExpr(firstToken, left, op, right);
+        }
+        return left;
+    }
+
+    private BinaryExpr comparison_expr() {
+        return null;
     }
 
     // private AST primaryExpr() {
     //     if(match(Kind.STRING_LIT)) return new AST.
-    // }
+    // }*/
 
     private boolean match(Kind... kinds) {
         for (Kind k: kinds) {

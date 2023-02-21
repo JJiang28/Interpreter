@@ -29,9 +29,6 @@ public class CompilerComponentFactory {
 			tokens.add(token);
 			token = temp.next();
 		}
-		for (int i = 0; i < tokens.size(); i++){
-			System.out.println(tokens.get(i).getKind());
-		}
 		return new Parser(tokens);
 	}
 
