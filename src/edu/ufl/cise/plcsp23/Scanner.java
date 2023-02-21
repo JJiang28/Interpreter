@@ -1,12 +1,15 @@
 package edu.ufl.cise.plcsp23;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import edu.ufl.cise.plcsp23.IToken.Kind;
 
 public class Scanner implements IScanner {
 	final String input;
     final char[] inputChars;
+    final List<IToken> tokens = new ArrayList<>();
     int column;
     int line;
     int pos;
@@ -138,6 +141,7 @@ public class Scanner implements IScanner {
                     if (ch == '0') {
                         advance();
                         column++;
+                        tokens.add(new NumLitToken(pos-1, 1, inputChars, line, column));
                         return new NumLitToken(pos-1, 1, inputChars, line, column);
                     }
                     if (checkDig == true) {
@@ -146,6 +150,7 @@ public class Scanner implements IScanner {
                     }
                     if(ch == 0) {
                         state = State.START;
+                        tokens.add(new Token(Kind.EOF, index, 1, inputChars, line, column));
                         return new Token(Kind.EOF, index, 1, inputChars, line, column);
                     }
                     if (ch == '"') {
@@ -170,10 +175,12 @@ public class Scanner implements IScanner {
                         column++;
                         if(reservedWords.containsKey(possible) && isDigit(ch)== false && isIdentStart(ch)==false) {
                             Kind k = reservedWords.get(possible);
+                            tokens.add(new Token(k, originalIndex, counter, inputChars, line, column-counter));
                             return new Token(k, originalIndex, counter, inputChars, line, column-counter);
                         }
                         possible = possible + ch;
                     }
+                    tokens.add(new Token(Kind.IDENT, originalIndex, counter, inputChars, line, column - counter));
                     return new Token(Kind.IDENT, originalIndex, counter, inputChars, line, column - counter);
                 }
                 case IN_NUM_LIT -> {
@@ -190,6 +197,7 @@ public class Scanner implements IScanner {
                     } catch (Exception e) {
                         throw new LexicalException("uhh");
                     }
+                    tokens.add(token);
                     return token;
                 }
                 case IN_STRING_LIT -> {
@@ -213,6 +221,7 @@ public class Scanner implements IScanner {
                     }
   
                     advance();
+                    tokens.add(new StringLitToken(originalIndex, pos-originalIndex, inputChars, line, column-counter+1));
                     return new StringLitToken(originalIndex, pos-originalIndex, inputChars, line, column-counter+1);
                 }
                 case IN_RESERVED -> {}
@@ -220,38 +229,45 @@ public class Scanner implements IScanner {
                     if (ch == '=' && inputChars[pos+1] == '=') {
                         pos +=2;
                         ch = inputChars[pos];
+                        tokens.add(new Token(Kind.EQ, pos-2, 2, inputChars, line, column));
                         return new Token(Kind.EQ, pos-2, 2, inputChars, line, column);
                     }
                     if (ch == '|' && inputChars[pos+1] == '|') {
                         pos +=2;
                         ch = inputChars[pos];
+                        tokens.add(new Token(Kind.OR, pos-2, 2, inputChars, line, column));
                         return new Token(Kind.OR, pos-2, 2, inputChars, line, column);
                     }
                     if (ch == '&' && inputChars[pos+1] == '&') {
                         pos +=2;
                         ch = inputChars[pos];
+                        tokens.add(new Token(Kind.AND, pos-2, 2, inputChars, line, column));
                         return new Token(Kind.AND, pos-2, 2, inputChars, line, column);
                     }
                     if (ch == '*' && inputChars[pos+1] == '*') {
                         pos +=2;
                         ch = inputChars[pos];
+                        tokens.add(new Token(Kind.EXP, pos-2, 2, inputChars, line, column));
                         return new Token(Kind.EXP, pos-2, 2, inputChars, line, column);
                     }
                     if (ch == '>' && inputChars[pos+1] == '=') {
                         pos +=2;
                         ch = inputChars[pos];
+                        tokens.add(new Token(Kind.GE, pos-2, 2, inputChars, line, column));
                         return new Token(Kind.GE, pos-2, 2, inputChars, line, column);
                     }
                     if (ch == '<') {
                         if (inputChars[pos+1] == '=') {
                             pos +=2;
                             ch = inputChars[pos];
+                            tokens.add(new Token(Kind.LE, pos-2, 2, inputChars, line, column));
                             return new Token(Kind.LE, pos-2, 2, inputChars, line, column);
                         }
                         if (inputChars[pos+1] == '-') {
                             if (inputChars[pos+2] == '>') {
                                 pos +=3;
                                 ch = inputChars[pos];
+                                tokens.add(new Token(Kind.EXCHANGE, pos-3, 3, inputChars, line, column));
                                 return new Token(Kind.EXCHANGE, pos-3, 3, inputChars, line, column);
                             }
                             throw new LexicalException("uhh");
@@ -259,66 +275,87 @@ public class Scanner implements IScanner {
                     }
                     if (ch == '.') {
                         advance();
+                        tokens.add(new Token(Kind.DOT, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.DOT, pos-1, 1, inputChars, line, column);
                     }if (ch == ',') {
                         advance();
+                        tokens.add(new Token(Kind.COMMA, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.COMMA, pos-1, 1, inputChars, line, column);
                     }if (ch == '?') {
                         advance();
+                        tokens.add(new Token(Kind.QUESTION, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.QUESTION, pos-1, 1, inputChars, line, column);
                     }if (ch == ':') {
                         advance();
+                        tokens.add(new Token(Kind.COLON, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.COLON, pos-1, 1, inputChars, line, column);
                     }if (ch == '(') {
                         advance();
+                        tokens.add(new Token(Kind.LPAREN, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.LPAREN, pos-1, 1, inputChars, line, column);
                     }if (ch == ')') {
                         advance();
+                        tokens.add(new Token(Kind.RPAREN, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.RPAREN, pos-1, 1, inputChars, line, column);
                     }if (ch == '<') {
                         advance();
+                        tokens.add(new Token(Kind.LT, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.LT, pos-1, 1, inputChars, line, column);
                     }if (ch == '>') {
                         advance();
+                        tokens.add(new Token(Kind.GT, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.GT, pos-1, 1, inputChars, line, column);
                     }if (ch == '[') {
                         advance();
+                        tokens.add(new Token(Kind.LSQUARE, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.LSQUARE, pos-1, 1, inputChars, line, column);
                     }if (ch == ']') {
                         advance();
+                        tokens.add(new Token(Kind.RSQUARE, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.RSQUARE, pos-1, 1, inputChars, line, column);
                     }if (ch == '{') {
                         advance();
+                        tokens.add(new Token(Kind.LCURLY, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.LCURLY, pos-1, 1, inputChars, line, column);
                     }if (ch == '}') {
                         advance();
+                        tokens.add(new Token(Kind.RCURLY, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.RCURLY, pos-1, 1, inputChars, line, column);
                     }if (ch == '=') {
                         advance();
+                        tokens.add(new Token(Kind.ASSIGN, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.ASSIGN, pos-1, 1, inputChars, line, column);
                     }if (ch == '!') {
                         advance();
+                        tokens.add(new Token(Kind.BANG, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.BANG, pos-1, 1, inputChars, line, column);
                     }if (ch == '&') {
                         advance();
+                        tokens.add(new Token(Kind.BITAND, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.BITAND, pos-1, 1, inputChars, line, column);
                     }if (ch == '|') {
                         advance();
+                        tokens.add(new Token(Kind.BITOR, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.BITOR, pos-1, 1, inputChars, line, column);
                     }if (ch == '+') {
                         advance();
+                        tokens.add(new Token(Kind.PLUS, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.PLUS, pos-1, 1, inputChars, line, column);
                     }if (ch == '-') {
                         advance();
+                        tokens.add(new Token(Kind.MINUS, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.MINUS, pos-1, 1, inputChars, line, column);
                     }if (ch == '*') {
                         advance();
+                        tokens.add(new Token(Kind.TIMES, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.TIMES, pos-1, 1, inputChars, line, column);
                     }if (ch == '/') {
                         advance();
+                        tokens.add(new Token(Kind.DIV, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.DIV, pos-1, 1, inputChars, line, column);
                     }if (ch == '%') {
                         advance();
+                        tokens.add(new Token(Kind.MOD, pos-1, 1, inputChars, line, column));
                         return new Token(Kind.MOD, pos-1, 1, inputChars, line, column);
                     }
                 }

@@ -9,6 +9,7 @@
  */
 
 package edu.ufl.cise.plcsp23;
+import java.util.List;
 
 
 public class CompilerComponentFactory {
@@ -20,8 +21,8 @@ public class CompilerComponentFactory {
 			throws LexicalException {
 		//add code to create a scanner and parser and return the parser
 		Scanner temp = new Scanner(input);
-		IToken newToken = temp.next();
-		return new Parser(newToken);
+		List<IToken> tokens = temp.tokens;
+		return new Parser(tokens);
 	}
 
 }
