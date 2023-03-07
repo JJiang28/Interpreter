@@ -115,7 +115,6 @@ public class Parser implements IParser {
 
     private Type type() throws PLCException {
         if(match(Kind.RES_image, Kind.RES_pixel, Kind.RES_int, Kind.RES_string, Kind.RES_void)) {
-            System.out.println(Type.getType(previous()));
             return Type.getType(previous());
         }
         return null;
@@ -240,9 +239,7 @@ public class Parser implements IParser {
     private Expr primaryExpr() throws PLCException{
         if(match(Kind.STRING_LIT)) return new StringLitExpr(previous());
         if(match(Kind.NUM_LIT)) return new NumLitExpr(previous());
-        System.out.println();
         if(match(Kind.IDENT)) { 
-            System.out.println("ident found");
             return new IdentExpr(previous());
         }
         if(match(Kind.LPAREN)) {
@@ -361,7 +358,7 @@ public class Parser implements IParser {
             IToken firstToken = peek();
             LValue lv = LValue();
             if (lv == null) return null;
-            if (match(Kind.EQ)) {
+            if (match(Kind.ASSIGN)) {
                 Expr e = expr();
                 return new AssignmentStatement(firstToken, lv, e);
             }
