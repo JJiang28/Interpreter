@@ -27,6 +27,7 @@ public class Parser implements IParser {
 
     public Program program() throws PLCException {
         Type type = type();
+        if (type == null) throw new SyntaxException("program issue");
         IToken firstToken = previous();
         if (match(Kind.IDENT)) {
             Ident ident = new Ident(previous());
