@@ -929,7 +929,7 @@ class Assignment3Test_starter {
 					xx = 22;
 					}
 					""";
-			assertThrows(SyntaxException.class, () -> {
+			assertThrows(PLCException.class, () -> {
 				@SuppressWarnings("unused")
 				AST ast = getAST(input);
 			});
