@@ -10,20 +10,29 @@
 
 package edu.ufl.cise.plcsp23.ast;
 
+import edu.ufl.cise.plcsp23.INumLitToken;
 import edu.ufl.cise.plcsp23.IToken;
 import edu.ufl.cise.plcsp23.PLCException;
 
-public class RandomExpr extends Expr{
-
-	public RandomExpr(IToken firstToken) {
+public class NumLitExpr extends Expr {
+	
+	public NumLitExpr(IToken firstToken) {
 		super(firstToken);
 	}
 
 	@Override
 	public Object visit(ASTVisitor v, Object arg) throws PLCException {
-		return v.visitRandomExpr(this, arg);
+		return v.visitNumLitExpr(this,arg);
 	}
 	
-	
+	public int getValue() {
+		return ((INumLitToken)firstToken).getValue();
+	}
 
+	@Override
+	public String toString() {
+		return "NumLitExpr [firstToken=" + firstToken + "]";
+	}
+
+	
 }

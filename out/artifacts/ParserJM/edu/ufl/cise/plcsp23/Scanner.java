@@ -78,9 +78,6 @@ public class Scanner implements IScanner {
         ops.put("**", Kind.EXP);
         ops.put("/", Kind.DIV);
         ops.put("%", Kind.MOD);
-        ops.put("RES_red", Kind.RES_red);
-        ops.put("RES_grn,", Kind.RES_grn);
-        ops.put("RES_blu", Kind.RES_blu);
     }
 
     

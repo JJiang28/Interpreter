@@ -8,22 +8,11 @@
  * This code may not be posted on a public web site either during or after the course.  
  */
 
-package edu.ufl.cise.plcsp23.ast;
 
-import edu.ufl.cise.plcsp23.IToken;
-import edu.ufl.cise.plcsp23.PLCException;
+package edu.ufl.cise.plcsp23;
 
-public class RandomExpr extends Expr{
+public interface IStringLitToken extends IToken {
 
-	public RandomExpr(IToken firstToken) {
-		super(firstToken);
-	}
-
-	@Override
-	public Object visit(ASTVisitor v, Object arg) throws PLCException {
-		return v.visitRandomExpr(this, arg);
-	}
+	String getValue();
 	
-	
-
 }

@@ -124,6 +124,8 @@ public class Parser implements IParser {
         if(match(Kind.STRING_LIT)) return new StringLitExpr(previous());
         if(match(Kind.NUM_LIT)) return new NumLitExpr(previous());
         if(match(Kind.IDENT)) return new IdentExpr(previous());
+        if(match(Kind.RES_Z)) return new ZExpr(previous());
+        if(match(Kind.RES_rand)) return new RandomExpr(previous());
         if(match(Kind.LPAREN)) {
             Expr expr1 = expr();
             if (!match(Kind.RPAREN)) {
@@ -131,9 +133,6 @@ public class Parser implements IParser {
             };
             return expr1;
         }
-        if(match(Kind.RES_Z)) return new ZExpr(previous());
-        if(match(Kind.RES_rand)) return new RandomExpr(previous());
-        if(match(Kind.RES_X)) return new 
         throw new SyntaxException("not valid");
     }
 
