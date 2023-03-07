@@ -35,6 +35,9 @@ public class Parser implements IParser {
                 List<NameDef> params = paramList();
                 if (match(Kind.RPAREN)) {
                     Block block = block();
+                    if (peek().getKind() != Kind.EOF) {
+                        throw new SyntaxException("something after");
+                    }
                     return new Program(firstToken, type, ident, params, block);
                 }
             }
