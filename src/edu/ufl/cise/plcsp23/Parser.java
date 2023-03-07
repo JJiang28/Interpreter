@@ -53,8 +53,9 @@ public class Parser implements IParser {
             if (match(Kind.RCURLY)) {
                 return new Block(firstToken, decs, states);
             }
+            throw new SyntaxException("missing rcurly");
         }
-        throw new SyntaxException("block");
+        throw new SyntaxException("missing lcurly");
     }
 
     private List<Declaration> decList() throws PLCException {
@@ -117,7 +118,6 @@ public class Parser implements IParser {
             System.out.println(Type.getType(previous()));
             return Type.getType(previous());
         }
-        System.out.println("zamn");
         return null;
     }
 
@@ -259,8 +259,13 @@ public class Parser implements IParser {
         if(match(Kind.RES_a)) return new PredeclaredVarExpr(previous());
         if(match(Kind.RES_r)) return new PredeclaredVarExpr(previous());
         int temp = current;
-        Expr expix = expandedPixel();
-        //if(expix != null)
+        Expr expanded = expandedPixel();
+        if (expanded == null) current = temp;
+        else return expanded;
+        temp = current;
+        Expr pixFunc = pixelFunctionExpr();
+        if (pixFunc == null) current = temp;
+        else return pixFunc;
         throw new SyntaxException("not valid");
     }
 
