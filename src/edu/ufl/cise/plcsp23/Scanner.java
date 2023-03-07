@@ -106,7 +106,6 @@ public class Scanner implements IScanner {
                 case START -> {
                     index = pos;
                     boolean checkDig = isDigit(ch);
-                    boolean checkLet = isLetter(ch);
                     boolean isIdent = isIdentStart(ch);
                     boolean isOp = isOper(ch);
                     boolean isWhite = isWhiteSpace(ch);

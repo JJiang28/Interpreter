@@ -22,7 +22,7 @@ public class Parser implements IParser {
     @Override
     public AST parse() throws PLCException {
         if (tokenList.size() == 1) throw new SyntaxException("Empty string");
-        return expr();
+        return program();
     }
 
     public Program program() throws PLCException {
@@ -94,6 +94,7 @@ public class Parser implements IParser {
     private NameDef nameDef() throws PLCException {
         IToken firstToken = peek();
         Type type = type();
+        if (type == null) return null;
         int temp = current;
         Dimension dim = dimension();
         if (dim == null) current = temp;
@@ -106,8 +107,10 @@ public class Parser implements IParser {
 
     private Type type() throws PLCException {
         if(match(Kind.RES_image, Kind.RES_pixel, Kind.RES_int, Kind.RES_string, Kind.RES_void)) {
+            System.out.println(Type.getType(previous()));
             return Type.getType(previous());
         }
+        System.out.println("zamn");
         return null;
     }
 
@@ -115,7 +118,7 @@ public class Parser implements IParser {
         IToken firstToken = peek();
         NameDef nd = nameDef();
         if (nd == null) return null;
-        if (match(Kind.EQ)) {
+        if (match(Kind.ASSIGN)) {
             Expr e = expr();
             return new Declaration(firstToken, nd, e);
         } else {
@@ -228,10 +231,13 @@ public class Parser implements IParser {
     }
 
     private Expr primaryExpr() throws PLCException{
-        System.out.println("we made it here");
         if(match(Kind.STRING_LIT)) return new StringLitExpr(previous());
         if(match(Kind.NUM_LIT)) return new NumLitExpr(previous());
-        if(match(Kind.IDENT)) return new IdentExpr(previous());
+        System.out.println();
+        if(match(Kind.IDENT)) { 
+            System.out.println("ident found");
+            return new IdentExpr(previous());
+        }
         if(match(Kind.LPAREN)) {
             Expr expr1 = expr();
             if (!match(Kind.RPAREN)) {
@@ -245,6 +251,9 @@ public class Parser implements IParser {
         if(match(Kind.RES_y)) return new PredeclaredVarExpr(previous());
         if(match(Kind.RES_a)) return new PredeclaredVarExpr(previous());
         if(match(Kind.RES_r)) return new PredeclaredVarExpr(previous());
+        int temp = current;
+        Expr expix = expandedPixel();
+        //if(expix != null)
         throw new SyntaxException("not valid");
     }
 
@@ -285,7 +294,7 @@ public class Parser implements IParser {
                 }
             }
         }
-        throw new SyntaxException("uh oh");
+        return null;
     }
 
     private Expr pixelFunctionExpr() throws PLCException {
@@ -323,7 +332,7 @@ public class Parser implements IParser {
             if (cc == null) current = temp;
             return new LValue(firstToken, ident, ps, cc);
         }
-        throw new SyntaxException("L value");
+        return null;
     }
 
     private Statement statement() throws PLCException {
@@ -339,6 +348,7 @@ public class Parser implements IParser {
         } else {
             IToken firstToken = peek();
             LValue lv = LValue();
+            if (lv == null) return null;
             if (match(Kind.EQ)) {
                 Expr e = expr();
                 return new AssignmentStatement(firstToken, lv, e);
