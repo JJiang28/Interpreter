@@ -50,6 +50,9 @@ public class Scanner implements IScanner {
         reservedWords.put("atan", Kind.RES_atan);
         reservedWords.put("if", Kind.RES_if);
         reservedWords.put("while", Kind.RES_while);
+        reservedWords.put("red", Kind.RES_red);
+        reservedWords.put("blu", Kind.RES_blu);
+        reservedWords.put("grn", Kind.RES_grn);
         ops.put(".", Kind.DOT);
         ops.put(",", Kind.COMMA);
         ops.put("?", Kind.QUESTION);
@@ -78,9 +81,6 @@ public class Scanner implements IScanner {
         ops.put("**", Kind.EXP);
         ops.put("/", Kind.DIV);
         ops.put("%", Kind.MOD);
-        ops.put("RES_red", Kind.RES_red);
-        ops.put("RES_grn,", Kind.RES_grn);
-        ops.put("RES_blu", Kind.RES_blu);
     }
 
     

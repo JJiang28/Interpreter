@@ -103,7 +103,10 @@ public class Parser implements IParser {
             Ident ident = new Ident(previous());
             return new NameDef(firstToken, type, dim, ident);
         }
-        return null;
+        else {
+            Ident ident = new Ident(previous());
+            return new NameDef(firstToken, type, null, ident);
+        }
     }
 
     private Type type() throws PLCException {

@@ -30,6 +30,9 @@ public class CompilerComponentFactory {
 			token = temp.next();
 		}
 		tokens.add(token);
+		// for (IToken e : tokens) {
+		// 	System.out.println(e.getKind());
+		// }
 		return new Parser(tokens);
 	}
 
