@@ -354,6 +354,10 @@ public class Parser implements IParser {
             Expr e = expr();
             Block block = block();
             return new WhileStatement(firstToken, e, block);
+        } else if (match(Kind.COLON)) {
+            IToken firstToken = previous();
+            Expr e = expr();
+            return new ReturnStatement(firstToken, e);
         } else {
             IToken firstToken = peek();
             LValue lv = LValue();
