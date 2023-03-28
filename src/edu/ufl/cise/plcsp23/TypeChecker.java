@@ -14,7 +14,7 @@ public class TypeChecker implements ASTVisitor{
     public static class SymbolTable {
         int currentNum = 0;
         Stack<Integer> scope_stack = new Stack<>();
-        HashMap<String,Declaration>entries = new HashMap<>();
+        HashMap<String,NameDef>entries = new HashMap<>();
 
         void enterScope() {
             currentNum++;
@@ -24,11 +24,11 @@ public class TypeChecker implements ASTVisitor{
             currentNum = scope_stack.pop();
         }
 
-        public boolean insert(String name, Declaration declaration) {
-            return (entries.putIfAbsent(name, declaration) == null);
+        public boolean insert(String name, NameDef desc) {
+            return (entries.putIfAbsent(name, desc ) == null);
         }
 
-        public Declaration lookup(String name) {
+        public NameDef lookup(String name) {
             //Declaration dec = entries.get(name);
             //if (dec)
             return entries.get(name);
@@ -53,6 +53,53 @@ public class TypeChecker implements ASTVisitor{
         return program;
     }
  
+    @Override
+    public Object visitBlock(Block block, Object arg) throws PLCException {
+        List<Declaration> dec = block.getDecList();
+        List<Statement> state = block.getStatementList();
+        for (Declaration node: dec) {
+            node.visit(this, arg);
+        }
+        for (Statement node: state) {
+            node.visit(this, arg);
+        } 
+        return block;
+    }
+
+    @Override
+    public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
+        NameDef name = declaration.getNameDef();
+        Expr initializer = declaration.getInitializer();
+        name.visit(this, arg);
+        if(initializer != null) {
+            initializer.visit(this, arg);
+        }
+        return declaration;
+    }
+    
+    @Override  
+    public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        Dimension dim = nameDef.getDimension();
+        if(dim != null) {
+            dim.visit(this, arg);
+        }
+        String name = nameDef.getIdent().getName();
+        boolean inserted = symbolTable.insert(name, nameDef);
+        check(inserted, null, "already in table");
+        return nameDef.getType();
+    }
+
+    @Override
+    public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
+        Type width = dimension.getWidth().getType();
+        Type height = dimension.getHeight().getType();
+        if (width == Type.INT && height == Type.INT) {
+            return null;
+        }
+        throw new TypeCheckException("Dimensions are not integers");
+    }
+
+
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         Type leftType = binaryExpr.getLeft().getType();
         Type rightType = binaryExpr.getRight().getType();
@@ -157,30 +204,6 @@ public class TypeChecker implements ASTVisitor{
         }
     }
 
-    @Override
-    public Object visitBlock(Block block, Object arg) throws PLCException {
-        List<Declaration> dec = block.getDecList();
-        List<Statement> state = block.getStatementList();
-        for (Declaration node: dec) {
-            node.visit(this, arg);
-        }
-        for (Statement node: state) {
-            node.visit(this, arg);
-        } 
-        return block;
-    }
-
-    @Override
-    public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
-        NameDef name = declaration.getNameDef();
-        Expr initializer = declaration.getInitializer();
-
-        Type type = name.getType();
-        if(initializer != null) {
-            Type initType = initializer.getType();
-        }
-    }
-
 
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
         switch(unaryExpr.getOp()) {
@@ -233,7 +256,6 @@ public class TypeChecker implements ASTVisitor{
 
     Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException;
 
-    Object visitDimension(Dimension dimension, Object arg) throws PLCException;
 
     Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException;
 
@@ -242,8 +264,6 @@ public class TypeChecker implements ASTVisitor{
     Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException;
 
     Object visitLValue(LValue lValue, Object arg) throws PLCException;
-
-    Object visitNameDef(NameDef nameDef, Object arg) throws PLCException;
 
     Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException;
 
@@ -255,7 +275,9 @@ public class TypeChecker implements ASTVisitor{
 
     Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException;
 
-    Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException;
+    Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException {
+
+    }
 
     Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException;
 
