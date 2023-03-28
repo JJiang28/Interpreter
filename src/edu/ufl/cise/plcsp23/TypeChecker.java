@@ -5,37 +5,53 @@ import edu.ufl.cise.plcsp23.ast.*;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 import edu.ufl.cise.plcsp23.IToken.Kind;
 
 public class TypeChecker implements ASTVisitor{
 
     public static class SymbolTable {
+        int currentNum = 0;
+        Stack<Integer> scope_stack = new Stack<>();
         HashMap<String,Declaration>entries = new HashMap<>();
+
+        void enterScope() {
+            currentNum++;
+            scope_stack.push(currentNum);
+        }
+        void closeScope() {
+            currentNum = scope_stack.pop();
+        }
 
         public boolean insert(String name, Declaration declaration) {
             return (entries.putIfAbsent(name, declaration) == null);
         }
 
         public Declaration lookup(String name) {
+            //Declaration dec = entries.get(name);
+            //if (dec)
             return entries.get(name);
         }
     }
 
-    private void check(boolean condition, AST node, String message) throws PLCException {
-        if (!condition) {throw new PLCException(message);}
+    SymbolTable symbolTable = new SymbolTable();
+
+    private void check(boolean condition, AST node, String message) throws TypeCheckException {
+        if (!condition) {throw new TypeCheckException("rawr");}
     }
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
-        List<NameDef> decAndStatements = program.getParamList();
-        for (NameDef node: decAndStatements) {
-            node.visit(this, arg);
+        List<NameDef> paramList = program.getParamList();
+        for (NameDef param : paramList) {
+            param.visit(this, arg);
         }
+        // Visit the block
+        Block block = program.getBlock();
+        block.visit(this, arg);
         return program;
     }
-
-    Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException;
  
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         Type leftType = binaryExpr.getLeft().getType();
@@ -141,37 +157,30 @@ public class TypeChecker implements ASTVisitor{
         }
     }
 
-    Object visitBlock(Block block, Object arg) throws PLCException;
+    @Override
+    public Object visitBlock(Block block, Object arg) throws PLCException {
+        List<Declaration> dec = block.getDecList();
+        List<Statement> state = block.getStatementList();
+        for (Declaration node: dec) {
+            node.visit(this, arg);
+        }
+        for (Statement node: state) {
+            node.visit(this, arg);
+        } 
+        return block;
+    }
 
-    Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException;
+    @Override
+    public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
+        NameDef name = declaration.getNameDef();
+        Expr initializer = declaration.getInitializer();
 
-    Object visitDeclaration(Declaration declaration, Object arg) throws PLCException;
+        Type type = name.getType();
+        if(initializer != null) {
+            Type initType = initializer.getType();
+        }
+    }
 
-    Object visitDimension(Dimension dimension, Object arg) throws PLCException;
-
-    Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException;
-
-    Object visitIdent(Ident ident, Object arg) throws PLCException;
-
-    Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException;
-
-    Object visitLValue(LValue lValue, Object arg) throws PLCException;
-
-    Object visitNameDef(NameDef nameDef, Object arg) throws PLCException;
-
-    Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException;
-
-    Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException;
-
-    Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException;
-
-    Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException;
-
-    Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException;
-
-    Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException;
-
-    Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException;
 
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
         switch(unaryExpr.getOp()) {
@@ -220,10 +229,46 @@ public class TypeChecker implements ASTVisitor{
         throw new TypeCheckException("invalid primary type");
     }
 
+    Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException;
+
+    Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException;
+
+    Object visitDimension(Dimension dimension, Object arg) throws PLCException;
+
+    Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException;
+
+    Object visitIdent(Ident ident, Object arg) throws PLCException;
+
+    Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException;
+
+    Object visitLValue(LValue lValue, Object arg) throws PLCException;
+
+    Object visitNameDef(NameDef nameDef, Object arg) throws PLCException;
+
+    Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException;
+
+    Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException;
+
+    Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException;
+
+    Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException;
+
+    Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException;
+
+    Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException;
+
+    Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException;
+
     Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException;
 
     Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException;
 
     Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException;
 
+    private boolean assignmentCompatability(Type lhs, Type rhs) {
+        return (lhs==rhs || lhs == Type.IMAGE && rhs == Type.PIXEL 
+        || lhs == Type.IMAGE && rhs == Type.STRING ||
+        lhs == Type.PIXEL && rhs == Type.INT || lhs== Type.INT && rhs == Type.PIXEL
+        || lhs == Type.STRING && (rhs == Type.INT || rhs == Type.PIXEL || rhs == Type.IMAGE));
+    }
 }

@@ -36,8 +36,8 @@ public class CompilerComponentFactory {
 		return new Parser(tokens);
 	}
 
-	public static TypeChecker makeTypeChecker() {
-
-	}
+	// public static TypeChecker makeTypeChecker() {
+		
+	// }
 
 }
