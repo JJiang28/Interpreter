@@ -23,7 +23,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     private void check(boolean condition, AST node, String message) throws PLCException {
-        if (!condition) {throw new PLCException("rawr");}
+        if (!condition) {throw new PLCException(message);}
     }
 
     @Override
@@ -34,5 +34,196 @@ public class TypeChecker implements ASTVisitor{
         }
         return program;
     }
+
+    Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException;
+ 
+    public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
+        Type leftType = binaryExpr.getLeft().getType();
+        Type rightType = binaryExpr.getRight().getType();
+        switch(binaryExpr.getOp()) {
+            case BITOR, BITAND -> {
+                if (leftType == Type.PIXEL) {
+                    if (rightType == Type.PIXEL) {
+                        return Type.PIXEL;
+                    }
+                }
+                throw new TypeCheckException("invalid type");
+            }
+            case AND, OR -> {
+                if (leftType == Type.INT) {
+                    if (rightType == Type.INT) {
+                        return Type.INT;
+                    }
+                }
+                throw new TypeCheckException("invalid type");
+            }
+            case LT, GT, LE, GE -> {
+                if (leftType == Type.INT) {
+                    if (rightType == Type.INT) {
+                        return Type.INT;
+                    }
+                }
+                throw new TypeCheckException("invalid type");
+            }
+            case EQ -> {
+                switch (leftType) {
+                    case INT, PIXEL, IMAGE, STRING -> {
+                        if (rightType == leftType)
+                            return Type.INT;
+                        else
+                            throw new TypeCheckException("type mismatch"); 
+                    }
+                    default -> {
+                        throw new TypeCheckException("invalid type");
+                    }
+                }
+            }
+            case EXP -> {
+                if (rightType == Type.INT) {
+                    if (leftType == Type.INT) {
+                        return Type.INT;
+                    } else if (leftType == Type.PIXEL) {
+                        return Type.PIXEL;
+                    } else {
+                        throw new TypeCheckException("EXP left type");
+                    }
+                } else {
+                    throw new TypeCheckException("EXP right type");
+                }
+            }
+            case PLUS -> {
+                switch (leftType) {
+                    case INT, PIXEL, IMAGE, STRING -> {
+                        if (rightType == leftType)
+                            return leftType;
+                        else
+                            throw new TypeCheckException("type mismatch"); 
+                    }
+                    default -> {
+                        throw new TypeCheckException("invalid type");
+                    }
+                }
+            }
+            case MINUS -> {
+                switch (leftType) {
+                    case INT, PIXEL, IMAGE -> {
+                        if (rightType == leftType)
+                            return leftType;
+                        else
+                            throw new TypeCheckException("type mismatch"); 
+                    }
+                    default -> {
+                        throw new TypeCheckException("invalid type");
+                    }
+                }
+            }
+            case TIMES, DIV, MOD -> {
+                switch (leftType) {
+                    case INT, PIXEL, IMAGE -> {
+                        if (rightType == leftType) {
+                            return leftType;
+                        } else if (leftType == Type.PIXEL && rightType == Type.INT) {
+                            return Type.PIXEL;
+                        } else if (leftType == Type.IMAGE && rightType == Type.INT) {
+                            return Type.IMAGE;
+                        } else {
+                            throw new TypeCheckException("Invalid type combination");
+                        }    
+                    }
+                    default -> {
+                        throw new TypeCheckException("invalid type");
+                    }
+                }
+            }
+            default -> {
+                throw new TypeCheckException("Invalid op");
+            }
+        }
+    }
+
+    Object visitBlock(Block block, Object arg) throws PLCException;
+
+    Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException;
+
+    Object visitDeclaration(Declaration declaration, Object arg) throws PLCException;
+
+    Object visitDimension(Dimension dimension, Object arg) throws PLCException;
+
+    Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException;
+
+    Object visitIdent(Ident ident, Object arg) throws PLCException;
+
+    Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException;
+
+    Object visitLValue(LValue lValue, Object arg) throws PLCException;
+
+    Object visitNameDef(NameDef nameDef, Object arg) throws PLCException;
+
+    Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException;
+
+    Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException;
+
+    Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException;
+
+    Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException;
+
+    Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException;
+
+    Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException;
+
+    Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException;
+
+    public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
+        switch(unaryExpr.getOp()) {
+            case BANG -> {
+                if (unaryExpr.getE().getType() == Type.INT) {
+                    return Type.INT;
+                } else if (unaryExpr.getE().getType() == Type.PIXEL) {
+                    return Type.PIXEL;
+                }
+                check(false, null, "invalid type");
+            }
+            case MINUS, RES_cos, RES_sin, RES_atan -> {
+                if (unaryExpr.getE().getType() == Type.INT) {
+                    return Type.INT;
+                }
+                check(false, null, "invalid type");
+            }
+            default -> {
+                check(false, null, "invalid op");
+            }
+        };
+        return null;
+    }
+
+    public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+        Type primary = unaryExprPostfix.getPrimary().getType();
+        boolean hasPix = unaryExprPostfix.getPixel() != null;
+        boolean hasChan = unaryExprPostfix.getColor() != null;
+        if (primary == Type.PIXEL) {
+            if (!hasPix && hasChan) {
+                return Type.INT;
+            } else {
+                throw new TypeCheckException("invalid pixel");
+            }
+        } else if (primary == Type.IMAGE) {
+            if (!hasPix && hasChan) {
+                return Type.IMAGE;
+            } else if (hasPix && !hasChan) {
+                return Type.PIXEL;
+            } else if (hasPix && hasChan) {
+                return Type.INT;
+            } else {
+                throw new TypeCheckException("invalid image");
+            }
+        }
+        throw new TypeCheckException("invalid primary type");
+    }
+
+    Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException;
+
+    Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException;
+
+    Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException;
 
 }
