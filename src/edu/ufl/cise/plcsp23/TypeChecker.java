@@ -207,6 +207,11 @@ public class TypeChecker implements ASTVisitor{
             check(typeCompat, declaration, "type of exp and type do not match");
         }
         name.visit(this, arg);
+        if(name.getType() == Type.IMAGE) {
+            if(initializer == null && name.getDimension() == null) {
+                throw new TypeCheckException("not working");
+            }
+        }
         return declaration;
     }
 
@@ -300,9 +305,11 @@ public class TypeChecker implements ASTVisitor{
         return predeclaredVarExpr.getType();
     }
 
+    Type root;
+
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
-        progType = program.getType();
+        root = program.getType();
         List<NameDef> paramList = program.getParamList();
         for (NameDef param : paramList) {
             param.visit(this, arg);
@@ -319,7 +326,11 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
-        return null;
+        Type expr = (Type)returnStatement.getE().visit(this, arg);
+        if (expr == root) {
+            return expr;
+        }
+        throw new TypeCheckException("invalid return type!");
     }
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
