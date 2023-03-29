@@ -230,7 +230,8 @@ public class TypeChecker implements ASTVisitor{
         Type g = (Type)expandedPixelExpr.getGrnExpr().visit(this, arg);
         Type b = (Type)expandedPixelExpr.getBluExpr().visit(this, arg);
         if (r == Type.INT && g == Type.INT && b == Type.INT) {
-            return null;
+            expandedPixelExpr.setType(Type.PIXEL);
+            return expandedPixelExpr.getType();
         }
         throw new TypeCheckException("invalid pixel selector");
     }
@@ -309,6 +310,7 @@ public class TypeChecker implements ASTVisitor{
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
+        symbolTable.enterScope();
         root = program.getType();
         List<NameDef> paramList = program.getParamList();
         for (NameDef param : paramList) {
@@ -317,6 +319,7 @@ public class TypeChecker implements ASTVisitor{
         // Visit the block
         Block block = program.getBlock();
         block.visit(this, arg);
+        symbolTable.closeScope();
         return null;
     }
 
@@ -385,11 +388,11 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
+        // Expr expr = whileStatement.
         return null;
     }
 
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
-        Type Expr = (Type) statementWrite.getE().visit(this, arg);
         return null;
     }
 
