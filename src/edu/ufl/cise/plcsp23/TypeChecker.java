@@ -171,6 +171,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
+<<<<<<< Updated upstream
         Expr zero = conditionalExpr.getGuard();
         Expr one = conditionalExpr.getTrueCase();
         Expr two = conditionalExpr.getFalseCase();
@@ -185,6 +186,17 @@ public class TypeChecker implements ASTVisitor{
         }
         conditionalExpr.setType(one.getType());
         return conditionalExpr.getType();
+=======
+        Type guard = conditionalExpr.getGuard().getType();
+        Type trueCase = conditionalExpr.getTrueCase().getType();
+        Type falseCase = conditionalExpr.getFalseCase().getType();
+        if (guard == Type.INT) {
+            if (trueCase == falseCase) {
+                return null;
+            }
+        }
+        throw new TypeCheckException("conditional failed");
+>>>>>>> Stashed changes
     }
     
     @Override
@@ -227,7 +239,15 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
+<<<<<<< Updated upstream
         return null;
+=======
+        String name = identExpr.getName();
+        NameDef def = symbolTable.lookup(name);
+        check(def != null, identExpr, "unidentified identifier" + name);
+        return null;
+        //TODO: this
+>>>>>>> Stashed changes
     }
 
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
@@ -259,10 +279,15 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+<<<<<<< Updated upstream
         PixelSelector px = pixelFuncExpr.getSelector();
         px.visit(this, arg);
         pixelFuncExpr.setType(Type.INT);
         return pixelFuncExpr.getType();
+=======
+        Type expr = (Type) pixelFuncExpr.getSelector().visit(this, arg);
+        return Type.INT;
+>>>>>>> Stashed changes
     }
 
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
@@ -296,7 +321,11 @@ public class TypeChecker implements ASTVisitor{
         return randomExpr.getType();
     }
 
+<<<<<<< Updated upstream
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException {
+=======
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
+>>>>>>> Stashed changes
         return null;
     }
 
@@ -313,19 +342,18 @@ public class TypeChecker implements ASTVisitor{
                 } else if (unaryExpr.getE().getType() == Type.PIXEL) {
                     return Type.PIXEL;
                 }
-                check(false, null, "invalid type");
+                throw new TypeCheckException("invalid unary type");
             }
             case MINUS, RES_cos, RES_sin, RES_atan -> {
                 if (unaryExpr.getE().getType() == Type.INT) {
                     return Type.INT;
                 }
-                check(false, null, "invalid type");
+                throw new TypeCheckException("invalid unary type");
             }
             default -> {
-                check(false, null, "invalid op");
+                throw new TypeCheckException("invalid unary type");
             }
-        };
-        return null;
+        }
     }
 
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
