@@ -317,7 +317,7 @@ public class TypeChecker implements ASTVisitor{
         return randomExpr.getType();
     }
 
-    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException {
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         return null;
     }
 
@@ -334,19 +334,18 @@ public class TypeChecker implements ASTVisitor{
                 } else if (unaryExpr.getE().getType() == Type.PIXEL) {
                     return Type.PIXEL;
                 }
-                check(false, null, "invalid type");
+                throw new TypeCheckException("invalid unary type");
             }
             case MINUS, RES_cos, RES_sin, RES_atan -> {
                 if (unaryExpr.getE().getType() == Type.INT) {
                     return Type.INT;
                 }
-                check(false, null, "invalid type");
+                throw new TypeCheckException("invalid unary type");
             }
             default -> {
-                check(false, null, "invalid op");
+                throw new TypeCheckException("invalid unary type");
             }
-        };
-        return null;
+        }
     }
 
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
