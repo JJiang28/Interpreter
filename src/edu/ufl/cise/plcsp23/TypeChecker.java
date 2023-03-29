@@ -14,7 +14,6 @@ public class TypeChecker implements ASTVisitor{
     public static class SymbolTable {
         int currentNum = 0;
         Stack<HashMap<String, NameDef>> scope_stack = new Stack<>();
-        HashMap<String,NameDef>entries = new HashMap<>();
 
         void enterScope() {
             scope_stack.push(new HashMap<>());
@@ -24,17 +23,17 @@ public class TypeChecker implements ASTVisitor{
         }
 
         public boolean insert(String name, NameDef desc) {
-            return (entries.putIfAbsent(name, desc) == null);
+            return (scope_stack.peek().putIfAbsent(name, desc) == null);
         }
 
         public NameDef lookup(String name) {
             if(!scope_stack.isEmpty()) {
-                NameDef def = entries.get(name);
+                NameDef def = scope_stack.peek().get(name);
                 if (def != null) {
                     return def;
                 }
             }
-            return entries.get(name);
+            return scope_stack.peek().get(name);
         }
     }
 
@@ -256,6 +255,10 @@ public class TypeChecker implements ASTVisitor{
             px.visit(this, arg);
         }
         NameDef def = symbolTable.lookup(name);
+        // if(def != null & symbolTable.scope_stack.size() >1) {
+        //     def = symbolTable.lookup(name);
+        //     return def;
+        // }
         check(def != null, lValue, "no work");
         return def.getType();
     }
@@ -273,6 +276,10 @@ public class TypeChecker implements ASTVisitor{
         }
         String name = nameDef.getIdent().getName();
         boolean inserted = symbolTable.insert(name, nameDef);
+        // if(inserted == false && symbolTable.scope_stack.size() > 1) {
+        //         nameDef = symbolTable.lookup(name);
+        //         return nameDef;
+        // }
         check(inserted, nameDef, "already in table");
         if(nameDef.getType() == Type.VOID) {
             check(false, nameDef, "namedef is void");
@@ -394,7 +401,19 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        // Expr expr = whileStatement.
+        // Expr expr = whileStatement.getGuard();
+        // Type exprType = (Type)expr.visit(this, arg);
+        // System.out.println(exprType.toString());
+        // System.out.println(symbolTable.scope_stack.size());
+        // if(exprType != Type.INT) {
+        //     throw new TypeCheckException("while loop isn't equal to an integer");
+        // }
+        // symbolTable.enterScope();
+        // System.out.println(symbolTable.scope_stack.size());
+        // Block block = whileStatement.getBlock();
+        // block.visit(this, arg);
+        // symbolTable.closeScope();
+
         return null;
     }
 
