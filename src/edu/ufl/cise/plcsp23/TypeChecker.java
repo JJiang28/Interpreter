@@ -58,14 +58,14 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
-        Type leftType = binaryExpr.getLeft().getType();
-        binaryExpr.getLeft().visit(this, arg);
-        Type rightType = binaryExpr.getRight().getType();
+        Type leftType = (Type) binaryExpr.getLeft().visit(this, arg);
+        Type rightType = (Type) binaryExpr.getRight().visit(this, arg);
         binaryExpr.getRight().visit(this, arg);
         switch(binaryExpr.getOp()) {
             case BITOR, BITAND -> {
                 if (leftType == Type.PIXEL) {
                     if (rightType == Type.PIXEL) {
+                        binaryExpr.setType(Type.PIXEL);
                         return Type.PIXEL;
                     }
                 }
@@ -74,6 +74,7 @@ public class TypeChecker implements ASTVisitor{
             case AND, OR -> {
                 if (leftType == Type.INT) {
                     if (rightType == Type.INT) {
+                        binaryExpr.setType(Type.INT);
                         return Type.INT;
                     }
                 }
@@ -82,6 +83,7 @@ public class TypeChecker implements ASTVisitor{
             case LT, GT, LE, GE -> {
                 if (leftType == Type.INT) {
                     if (rightType == Type.INT) {
+                        binaryExpr.setType(Type.INT);
                         return Type.INT;
                     }
                 }
@@ -90,8 +92,10 @@ public class TypeChecker implements ASTVisitor{
             case EQ -> {
                 switch (leftType) {
                     case INT, PIXEL, IMAGE, STRING -> {
-                        if (rightType == leftType)
+                        if (rightType == leftType) {
+                            binaryExpr.setType(Type.INT);
                             return Type.INT;
+                        }
                         else
                             throw new TypeCheckException("type mismatch"); 
                     }
@@ -103,8 +107,10 @@ public class TypeChecker implements ASTVisitor{
             case EXP -> {
                 if (rightType == Type.INT) {
                     if (leftType == Type.INT) {
+                        binaryExpr.setType(Type.INT);
                         return Type.INT;
                     } else if (leftType == Type.PIXEL) {
+                        binaryExpr.setType(Type.PIXEL);
                         return Type.PIXEL;
                     } else {
                         throw new TypeCheckException("EXP left type");
@@ -116,8 +122,10 @@ public class TypeChecker implements ASTVisitor{
             case PLUS -> {
                 switch (leftType) {
                     case INT, PIXEL, IMAGE, STRING -> {
-                        if (rightType == leftType)
+                        if (rightType == leftType) {
+                            binaryExpr.setType(leftType);
                             return leftType;
+                        }
                         else
                             throw new TypeCheckException("type mismatch"); 
                     }
@@ -129,8 +137,10 @@ public class TypeChecker implements ASTVisitor{
             case MINUS -> {
                 switch (leftType) {
                     case INT, PIXEL, IMAGE -> {
-                        if (rightType == leftType)
+                        if (rightType == leftType) {
+                            binaryExpr.setType(leftType);
                             return leftType;
+                        }
                         else
                             throw new TypeCheckException("type mismatch"); 
                     }
@@ -143,10 +153,13 @@ public class TypeChecker implements ASTVisitor{
                 switch (leftType) {
                     case INT, PIXEL, IMAGE -> {
                         if (rightType == leftType) {
+                            binaryExpr.setType(leftType);
                             return leftType;
                         } else if (leftType == Type.PIXEL && rightType == Type.INT) {
+                            binaryExpr.setType(Type.PIXEL);
                             return Type.PIXEL;
                         } else if (leftType == Type.IMAGE && rightType == Type.INT) {
+                            binaryExpr.setType(Type.IMAGE);
                             return Type.IMAGE;
                         } else {
                             throw new TypeCheckException("Invalid type combination");
@@ -234,7 +247,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
-        return null;
+        return null; //TODO
     }
 
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
@@ -318,7 +331,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
-        return null;
+        return null; //TODO
     }
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
@@ -373,11 +386,11 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        return null;
+        return null; //TODO
     }
 
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
-        return null;
+        return null; //TODO
     }
 
     public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
