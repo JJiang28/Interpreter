@@ -48,12 +48,6 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
-        // LValue lv = statementAssign.getLv();
-        // Expr expr = statementAssign.getE();
-        // lv.visit(this, arg);
-        // expr.visit(this, arg);
-        // boolean type = assignmentCompatability((Type)lv.visit(this, arg), (Type)expr.visit(this, arg));
-        // check(type, statementAssign, "lv and expr don't work");f
         return null;
     }
 
@@ -209,18 +203,13 @@ public class TypeChecker implements ASTVisitor{
     @Override
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef name = declaration.getNameDef();
-        name.visit(this, arg);
         Expr initializer = declaration.getInitializer();
+        name.visit(this, arg);
         if(initializer != null) {
             initializer.visit(this, arg);
             boolean typeCompat = assignmentCompatability(name.getType(), initializer.getType());
             if(typeCompat == false) {
                 throw new TypeCheckException("Im going to kill myself");
-            }
-        }
-        if(name.getType() == Type.IMAGE) {
-            if(initializer == null && name.getDimension() == null) {
-                throw new TypeCheckException("type image but null");
             }
         }
         return declaration;
@@ -251,21 +240,16 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
-        if(symbolTable.lookup(identExpr.getName()) == null) {
-            throw new TypeCheckException("ident needs to be defined");
-        }
-        identExpr.setType(symbolTable.lookup(identExpr.getName()).getType());
-        return identExpr.getType();
+        String name = identExpr.getName();
+        NameDef def = symbolTable.lookup(name);
+        check(def != null, identExpr, "unidentified identifier" + name);
+        //check(def.isAssigned(), identExpr, "uninitialized var");
+        return null;
+        //TODO: this
     }
 
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-        Ident ident = lValue.getIdent();
-        PixelSelector px = lValue.getPixelSelector();
-        ColorChannel color = lValue.getColor();
-        if(ident == null) {
-            throw new TypeCheckException("Ident not declared");
-        }
-        return null;
+        return null; //TODO
     }
 
     @Override  
@@ -284,7 +268,7 @@ public class TypeChecker implements ASTVisitor{
         if(nameDef.getType() == Type.VOID) {
             check(false, nameDef, "namedef is void");
         }
-        return null;
+        return nameDef;
     }
 
     public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
@@ -405,5 +389,4 @@ public class TypeChecker implements ASTVisitor{
          lhs == Type.INT && rhs == Type.PIXEL ||
          lhs == Type.STRING && (rhs == Type.INT || rhs == Type.PIXEL || rhs == Type.IMAGE));
     }
-    
 }
