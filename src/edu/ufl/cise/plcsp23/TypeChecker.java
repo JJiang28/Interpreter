@@ -341,15 +341,15 @@ public class TypeChecker implements ASTVisitor{
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
         switch(unaryExpr.getOp()) {
             case BANG -> {
-                if (unaryExpr.getE().getType() == Type.INT) {
+                if ((Type)unaryExpr.getE().visit(this, arg) == Type.INT) {
                     return Type.INT;
-                } else if (unaryExpr.getE().getType() == Type.PIXEL) {
+                } else if ((Type)unaryExpr.getE().visit(this, arg) == Type.PIXEL) {
                     return Type.PIXEL;
                 }
                 throw new TypeCheckException("invalid unary type");
             }
             case MINUS, RES_cos, RES_sin, RES_atan -> {
-                if (unaryExpr.getE().getType() == Type.INT) {
+                if ((Type)unaryExpr.getE().visit(this, arg) == Type.INT) {
                     return Type.INT;
                 }
                 throw new TypeCheckException("invalid unary type");
@@ -361,7 +361,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
-        Type primary = unaryExprPostfix.getPrimary().getType();
+        Type primary = (Type)unaryExprPostfix.getPrimary().visit(this, arg);
         boolean hasPix = unaryExprPostfix.getPixel() != null;
         boolean hasChan = unaryExprPostfix.getColor() != null;
         if (primary == Type.PIXEL) {
