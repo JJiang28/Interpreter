@@ -1210,3 +1210,4 @@ class TypeCheckTest_starter {
 				""";
 		typeCheckError(input);
 	}
+}

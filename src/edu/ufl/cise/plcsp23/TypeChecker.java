@@ -25,12 +25,18 @@ public class TypeChecker implements ASTVisitor{
         }
 
         public boolean insert(String name, NameDef desc) {
-            return (entries.putIfAbsent(name, desc ) == null);
+            return (entries.putIfAbsent(name, desc) == null);
         }
 
         public NameDef lookup(String name) {
-            //Declaration dec = entries.get(name);
-            //if (dec)
+            // NameDef pervasive = null;
+            // NameDef best = null;
+            // NameDef serial = entries.get(name);
+            // for(NameDef e:entries.values()) {
+            //     if (e == serial) {
+
+            //     }
+            // }
             return entries.get(name);
         }
     }
@@ -42,12 +48,14 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
-
+        return null;
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         Type leftType = binaryExpr.getLeft().getType();
+        binaryExpr.getLeft().visit(this, arg);
         Type rightType = binaryExpr.getRight().getType();
+        binaryExpr.getRight().visit(this, arg);
         switch(binaryExpr.getOp()) {
             case BITOR, BITAND -> {
                 if (leftType == Type.PIXEL) {
@@ -162,7 +170,22 @@ public class TypeChecker implements ASTVisitor{
         return block;
     }
 
-    Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException;
+    public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
+        Expr zero = conditionalExpr.getGuard();
+        Expr one = conditionalExpr.getTrueCase();
+        Expr two = conditionalExpr.getFalseCase();
+        zero.visit(this, arg);
+        one.visit(this, arg);
+        two.visit(this,arg);
+        if(zero.getType() != Type.INT) {
+            check(false, zero, "Not an int");
+        }
+        if(one.getType() != two.getType()) {
+            check(false, one, "the true and false cases are not the same");
+        }
+        conditionalExpr.setType(one.getType());
+        return conditionalExpr.getType();
+    }
     
     @Override
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
@@ -171,6 +194,10 @@ public class TypeChecker implements ASTVisitor{
         name.visit(this, arg);
         if(initializer != null) {
             initializer.visit(this, arg);
+            boolean typeCompat = assignmentCompatability(name.getType(), initializer.getType());
+            if(typeCompat == false) {
+                throw new TypeCheckException("Im going to kill myself");
+            }
         }
         return declaration;
     }
@@ -195,24 +222,35 @@ public class TypeChecker implements ASTVisitor{
         throw new TypeCheckException("invalid pixel selector");
     }
 
-    Object visitIdent(Ident ident, Object arg) throws PLCException;
+    public Object visitIdent(Ident ident, Object arg) throws PLCException {
+        return null;
+    }
 
-    Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException;
+    public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
+        return null;
+    }
 
     public Object visitLValue(LValue lValue, Object arg) throws PLCException {
-
+        return null;
     }
 
     @Override  
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
+        Type type = nameDef.getType();
+        nameDef.getIdent().visit(this, arg);
         Dimension dim = nameDef.getDimension();
         if(dim != null) {
-            dim.visit(this, arg);
+            if(nameDef.getType() != Type.IMAGE) {
+                check(false, nameDef, "Not an image");
+            }
         }
         String name = nameDef.getIdent().getName();
         boolean inserted = symbolTable.insert(name, nameDef);
         check(inserted, null, "already in table");
-        return nameDef.getType();
+        if(nameDef.getType() == Type.VOID) {
+            check(false, nameDef, "namedef is void");
+        }
+        return nameDef;
     }
 
     public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
@@ -220,7 +258,12 @@ public class TypeChecker implements ASTVisitor{
         return numLitExpr.getType();
     }
 
-    Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException;
+    public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+        PixelSelector px = pixelFuncExpr.getSelector();
+        px.visit(this, arg);
+        pixelFuncExpr.setType(Type.INT);
+        return pixelFuncExpr.getType();
+    }
 
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
         Type x = pixelSelector.getX().getType();
@@ -253,7 +296,9 @@ public class TypeChecker implements ASTVisitor{
         return randomExpr.getType();
     }
 
-    Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException;
+    public Object visitReturnStatement(ReturnStatement returnStatement, Object arg)throws PLCException {
+        return null;
+    }
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
         stringLitExpr.setType(Type.STRING);
@@ -307,9 +352,13 @@ public class TypeChecker implements ASTVisitor{
         throw new TypeCheckException("invalid primary type");
     }
 
-    Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException;
+    public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
+        return null;
+    }
 
-    Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException;
+    public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
+        return null;
+    }
 
     public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
         zExpr.setType(Type.INT);
