@@ -379,10 +379,6 @@ public class TypeChecker implements ASTVisitor{
                 unaryExprPostfix.setType(Type.IMAGE);
                 return Type.IMAGE;
             } else if (hasPix && !hasChan) {
-                // if (unaryExprPostfix.getPixel().getX().getType() != Type.INT ||
-                //     unaryExprPostfix.getPixel().getY().getType() != Type.INT) {
-                //         throw new TypeCheckException("invalid pixel");
-                //     }
                 unaryExprPostfix.getPixel().visit(this, arg);
                 unaryExprPostfix.setType(Type.PIXEL);
                 return Type.PIXEL;
