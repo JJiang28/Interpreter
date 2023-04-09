@@ -9,11 +9,13 @@ import java.util.Stack;
 
 import edu.ufl.cise.plcsp23.IToken.Kind;
 
+import javax.naming.Name;
+
 public class TypeChecker implements ASTVisitor{
 
     public static class SymbolTable {
-        int currentNum = 0;
-        Stack<HashMap<String, NameDef>> scope_stack = new Stack<>();
+        private HashMap<String, NameDef> globalSymbols;
+        private Stack<HashMap<String, NameDef>> scope_stack;
 
         void enterScope() {
             scope_stack.push(new HashMap<>());
@@ -22,18 +24,24 @@ public class TypeChecker implements ASTVisitor{
             scope_stack.pop();
         }
 
+        public SymbolTable() {
+            globalSymbols = new HashMap<>();
+            scope_stack = new Stack<>();
+            scope_stack.push(new HashMap<>());
+        }
+
         public boolean insert(String name, NameDef desc) {
             return (scope_stack.peek().putIfAbsent(name, desc) == null);
         }
 
         public NameDef lookup(String name) {
-            if(!scope_stack.isEmpty()) {
-                NameDef def = scope_stack.peek().get(name);
-                if (def != null) {
-                    return def;
+            for (int i = scope_stack.size() - 1; i >= 0; i--) {
+                HashMap<String, NameDef> symbolTable = scope_stack.get(i);
+                if(symbolTable.containsKey(name)) {
+                    return symbolTable.get(name);
                 }
             }
-            return scope_stack.peek().get(name);
+            return globalSymbols.get(name);
         }
     }
 
@@ -178,8 +186,8 @@ public class TypeChecker implements ASTVisitor{
         List<Statement> state = block.getStatementList();
         for (Statement node: state) {
             node.visit(this, arg);
-        } 
-        return block;
+        }
+        return null;
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
@@ -317,8 +325,8 @@ public class TypeChecker implements ASTVisitor{
 
     @Override
     public Object visitProgram(Program program, Object arg) throws PLCException {
-        symbolTable.enterScope();
         root = program.getType();
+        symbolTable.enterScope();
         List<NameDef> paramList = program.getParamList();
         for (NameDef param : paramList) {
             param.visit(this, arg);
@@ -401,19 +409,15 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        // Expr expr = whileStatement.getGuard();
-        // Type exprType = (Type)expr.visit(this, arg);
-        // System.out.println(exprType.toString());
-        // System.out.println(symbolTable.scope_stack.size());
-        // if(exprType != Type.INT) {
-        //     throw new TypeCheckException("while loop isn't equal to an integer");
-        // }
-        // symbolTable.enterScope();
-        // System.out.println(symbolTable.scope_stack.size());
-        // Block block = whileStatement.getBlock();
-        // block.visit(this, arg);
-        // symbolTable.closeScope();
-
+         Expr expr = whileStatement.getGuard();
+         Type exprType = (Type)expr.visit(this, arg);
+         if(exprType != Type.INT) {
+             throw new TypeCheckException("while loop isn't equal to an integer");
+         }
+         symbolTable.enterScope();
+         Block block = whileStatement.getBlock();
+         block.visit(this, arg);
+         symbolTable.closeScope();
         return null;
     }
 
