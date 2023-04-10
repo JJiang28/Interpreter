@@ -58,7 +58,7 @@ public class TypeChecker implements ASTVisitor{
         Type returnType = (Type)expr.visit(this, arg);
         boolean xd = assignmentCompatability(type, returnType);
         check(xd, statementAssign, "type of exp and dec type don't match");
-        return null;
+        return returnType;
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
@@ -70,7 +70,7 @@ public class TypeChecker implements ASTVisitor{
                 if (leftType == Type.PIXEL) {
                     if (rightType == Type.PIXEL) {
                         binaryExpr.setType(Type.PIXEL);
-                        return Type.PIXEL;
+                        return binaryExpr.getType();
                     }
                 }
                 throw new TypeCheckException("invalid type");
@@ -79,7 +79,7 @@ public class TypeChecker implements ASTVisitor{
                 if (leftType == Type.INT) {
                     if (rightType == Type.INT) {
                         binaryExpr.setType(Type.INT);
-                        return Type.INT;
+                        return binaryExpr.getType();
                     }
                 }
                 throw new TypeCheckException("invalid type");
@@ -88,7 +88,7 @@ public class TypeChecker implements ASTVisitor{
                 if (leftType == Type.INT) {
                     if (rightType == Type.INT) {
                         binaryExpr.setType(Type.INT);
-                        return Type.INT;
+                        return binaryExpr.getType();
                     }
                 }
                 throw new TypeCheckException("invalid type");
@@ -98,7 +98,7 @@ public class TypeChecker implements ASTVisitor{
                     case INT, PIXEL, IMAGE, STRING -> {
                         if (rightType == leftType) {
                             binaryExpr.setType(Type.INT);
-                            return Type.INT;
+                            return binaryExpr.getType();
                         }
                         else
                             throw new TypeCheckException("type mismatch");
@@ -112,10 +112,10 @@ public class TypeChecker implements ASTVisitor{
                 if (rightType == Type.INT) {
                     if (leftType == Type.INT) {
                         binaryExpr.setType(Type.INT);
-                        return Type.INT;
+                        return binaryExpr.getType();
                     } else if (leftType == Type.PIXEL) {
                         binaryExpr.setType(Type.PIXEL);
-                        return Type.PIXEL;
+                        return binaryExpr.getType();
                     } else {
                         throw new TypeCheckException("EXP left type");
                     }
@@ -157,11 +157,14 @@ public class TypeChecker implements ASTVisitor{
                 switch (leftType) {
                     case INT, PIXEL, IMAGE -> {
                         if (rightType == leftType) {
-                            return leftType;
+                            binaryExpr.setType(rightType);
+                            return binaryExpr.getType();
                         } else if (leftType == Type.PIXEL && rightType == Type.INT) {
-                            return Type.PIXEL;
+                            binaryExpr.setType(leftType);
+                            return binaryExpr.getType();
                         } else if (leftType == Type.IMAGE && rightType == Type.INT) {
-                            return Type.IMAGE;
+                            binaryExpr.setType(leftType);
+                            return binaryExpr.getType();
                         } else {
                             throw new TypeCheckException("Invalid type combination");
                         }
@@ -187,7 +190,7 @@ public class TypeChecker implements ASTVisitor{
         for (Statement node: state) {
             node.visit(this, arg);
         }
-        return null;
+        return block;
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
@@ -227,7 +230,7 @@ public class TypeChecker implements ASTVisitor{
         Type width = (Type)dimension.getWidth().visit(this, arg);
         Type height = (Type)dimension.getHeight().visit(this, arg);
         if (width == Type.INT && height == Type.INT) {
-            return null;
+            return dimension;
         }
         throw new TypeCheckException("Dimensions are not integers");
     }
@@ -244,7 +247,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitIdent(Ident ident, Object arg) throws PLCException {
-        return null;
+        return ident;
     }
 
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
@@ -284,7 +287,7 @@ public class TypeChecker implements ASTVisitor{
         if(nameDef.getType() == Type.VOID) {
             check(false, nameDef, "namedef is void");
         }
-        return null;
+        return type;
     }
 
     public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
@@ -303,7 +306,7 @@ public class TypeChecker implements ASTVisitor{
         Type x = (Type)pixelSelector.getX().visit(this, arg);
         Type y = (Type)pixelSelector.getY().visit(this, arg);
         if (x == Type.INT && y == Type.INT) {
-            return null;
+            return x;
         }
         throw new TypeCheckException("invalid pixel selector");
     }
@@ -327,7 +330,7 @@ public class TypeChecker implements ASTVisitor{
         Block block = program.getBlock();
         block.visit(this, arg);
         symbolTable.closeScope();
-        return null;
+        return program.getType();
     }
 
     public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
@@ -350,14 +353,17 @@ public class TypeChecker implements ASTVisitor{
         switch(unaryExpr.getOp()) {
             case BANG -> {
                 if ((Type)unaryExpr.getE().visit(this, arg) == Type.INT) {
+                    unaryExpr.setType(Type.INT);
                     return Type.INT;
                 } else if ((Type)unaryExpr.getE().visit(this, arg) == Type.PIXEL) {
+                    unaryExpr.setType(Type.PIXEL);
                     return Type.PIXEL;
                 }
                 throw new TypeCheckException("invalid unary type");
             }
             case MINUS, RES_cos, RES_sin, RES_atan -> {
                 if ((Type)unaryExpr.getE().visit(this, arg) == Type.INT) {
+                    unaryExpr.setType(Type.INT);
                     return Type.INT;
                 }
                 throw new TypeCheckException("invalid unary type");
@@ -409,12 +415,12 @@ public class TypeChecker implements ASTVisitor{
          Block block = whileStatement.getBlock();
          block.visit(this, arg);
          symbolTable.closeScope();
-        return null;
+        return whileStatement.getGuard().getType();
     }
 
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         Type expr = (Type) statementWrite.getE().visit(this, arg);
-        return null;
+        return expr;
     }
 
     public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
