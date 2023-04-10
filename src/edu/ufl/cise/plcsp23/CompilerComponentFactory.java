@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 import edu.ufl.cise.plcsp23.IToken.Kind;
+import edu.ufl.cise.plcsp23.ast.ASTVisitor;
 
 
 public class CompilerComponentFactory {
@@ -40,6 +41,7 @@ public class CompilerComponentFactory {
 		return new TypeChecker();
 	}
 
-
-
+	public static ASTVisitor makeCodeGenerator(String pack) {
+		return new CodeGeneration(pack);
+	}
 }

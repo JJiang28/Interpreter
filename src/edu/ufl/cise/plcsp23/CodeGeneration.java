@@ -9,6 +9,11 @@ import edu.ufl.cise.plcsp23.ast.*;
 
 public class CodeGeneration implements ASTVisitor {
     public Set<String> imports = new HashSet<>();
+    String all;
+
+    public CodeGeneration(String pack) {
+        all = pack;
+    }
 
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         LValue LV = statementAssign.getLv();
@@ -19,7 +24,7 @@ public class CodeGeneration implements ASTVisitor {
     }
  
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
-
+      throw new UnsupportedOperationException();
      }
  
 	 public Object visitBlock(Block block, Object arg) throws PLCException {
@@ -40,7 +45,7 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
-
+      throw new UnsupportedOperationException();
      }
  
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
@@ -63,7 +68,9 @@ public class CodeGeneration implements ASTVisitor {
         throw new UnsupportedOperationException();
      }
  
-	 Object visitIdent(Ident ident, Object arg) throws PLCException;
+	 public Object visitIdent(Ident ident, Object arg) throws PLCException {
+      throw new UnsupportedOperationException();
+    }
  
 	 public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
         return identExpr.getName();
@@ -83,7 +90,9 @@ public class CodeGeneration implements ASTVisitor {
         return typeStr + " " + name;
      }
  
-	 Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException;
+	 public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
+      throw new UnsupportedOperationException();
+    }
  
 	 public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
         throw new UnsupportedOperationException();
@@ -116,8 +125,15 @@ public class CodeGeneration implements ASTVisitor {
         for (int i = 0; i < paramStrs.size()-1; i++) {
             code += paramStrs.get(i) + ", ";
         }
-        code += paramStrs.get(paramStrs.size()-1) + ") {\n" +
+        if (paramStrs.size() == 0) {
+            code += ") {\n" +
+                    blockStr + "}" + "\n}";
+        }
+
+        if(paramStrs.size() > 0) {
+            code += paramStrs.get(paramStrs.size() - 1) + ") {\n" +
                     blockStr + "}";
+        }
 
         return code;
      }
@@ -148,7 +164,7 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
         Expr expr = whileStatement.getGuard();
         Block block = whileStatement.getBlock();
-        
+        throw new UnsupportedOperationException();
      }
  
 	 public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
