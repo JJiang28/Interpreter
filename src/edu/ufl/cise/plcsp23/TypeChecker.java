@@ -262,11 +262,12 @@ public class TypeChecker implements ASTVisitor{
         Ident ident = lValue.getIdent();
         String name = ident.getName();
         PixelSelector px = lValue.getPixelSelector();
-        if(px != null) {
-            px.visit(this, arg);
-        }
         NameDef def = symbolTable.lookup(name);
         check(def != null, lValue, "no work");
+        if(px != null) {
+            px.visit(this, arg);
+            return px;
+        }
         return def.getType();
     }
 
@@ -276,10 +277,10 @@ public class TypeChecker implements ASTVisitor{
         nameDef.getIdent().visit(this, arg);
         Dimension dim = nameDef.getDimension();
         if(dim != null) {
-            nameDef.getDimension().visit(this, arg);
             if(nameDef.getType() != Type.IMAGE) {
                 check(false, nameDef, "Not an image");
             }
+            nameDef.getDimension().visit(this, arg);
         }
         String name = nameDef.getIdent().getName();
         boolean inserted = symbolTable.insert(name, nameDef);
@@ -306,7 +307,7 @@ public class TypeChecker implements ASTVisitor{
         Type x = (Type)pixelSelector.getX().visit(this, arg);
         Type y = (Type)pixelSelector.getY().visit(this, arg);
         if (x == Type.INT && y == Type.INT) {
-            return x;
+            return null;
         }
         throw new TypeCheckException("invalid pixel selector");
     }
@@ -376,8 +377,8 @@ public class TypeChecker implements ASTVisitor{
 
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
         Type primary = (Type)unaryExprPostfix.getPrimary().visit(this, arg);
-        boolean hasPix = unaryExprPostfix.getPixel() != null;
-        boolean hasChan = unaryExprPostfix.getColor() != null;
+        boolean hasPix = (unaryExprPostfix.getPixel() != null);
+        boolean hasChan = (unaryExprPostfix.getColor() != null);
         if (primary == Type.PIXEL) {
             if (!hasPix && hasChan) {
                 unaryExprPostfix.setType(Type.INT);
