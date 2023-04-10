@@ -27,7 +27,7 @@ public class TypeChecker implements ASTVisitor{
         public SymbolTable() {
             globalSymbols = new HashMap<>();
             scope_stack = new Stack<>();
-            scope_stack.push(new HashMap<>());
+            enterScope();
         }
 
         public boolean insert(String name, NameDef desc) {
@@ -83,7 +83,7 @@ public class TypeChecker implements ASTVisitor{
                     }
                 }
                 throw new TypeCheckException("invalid type");
-            }   
+            }
             case LT, GT, LE, GE -> {
                 if (leftType == Type.INT) {
                     if (rightType == Type.INT) {
@@ -101,7 +101,7 @@ public class TypeChecker implements ASTVisitor{
                             return Type.INT;
                         }
                         else
-                            throw new TypeCheckException("type mismatch"); 
+                            throw new TypeCheckException("type mismatch");
                     }
                     default -> {
                         throw new TypeCheckException("invalid type");
@@ -131,7 +131,7 @@ public class TypeChecker implements ASTVisitor{
                             return leftType;
                         }
                         else
-                            throw new TypeCheckException("type mismatch"); 
+                            throw new TypeCheckException("type mismatch");
                     }
                     default -> {
                         throw new TypeCheckException("invalid type");
@@ -146,7 +146,7 @@ public class TypeChecker implements ASTVisitor{
                             return leftType;
                         }
                         else
-                            throw new TypeCheckException("type mismatch"); 
+                            throw new TypeCheckException("type mismatch");
                     }
                     default -> {
                         throw new TypeCheckException("invalid type");
@@ -164,7 +164,7 @@ public class TypeChecker implements ASTVisitor{
                             return Type.IMAGE;
                         } else {
                             throw new TypeCheckException("Invalid type combination");
-                        }    
+                        }
                     }
                     default -> {
                         throw new TypeCheckException("invalid type");
@@ -203,7 +203,7 @@ public class TypeChecker implements ASTVisitor{
         conditionalExpr.setType(one);
         return conditionalExpr.getType();
     }
-    
+
     @Override
     public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef name = declaration.getNameDef();
@@ -263,15 +263,11 @@ public class TypeChecker implements ASTVisitor{
             px.visit(this, arg);
         }
         NameDef def = symbolTable.lookup(name);
-        // if(def != null & symbolTable.scope_stack.size() >1) {
-        //     def = symbolTable.lookup(name);
-        //     return def;
-        // }
         check(def != null, lValue, "no work");
         return def.getType();
     }
 
-    @Override  
+    @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
         Type type = nameDef.getType();
         nameDef.getIdent().visit(this, arg);
@@ -284,10 +280,6 @@ public class TypeChecker implements ASTVisitor{
         }
         String name = nameDef.getIdent().getName();
         boolean inserted = symbolTable.insert(name, nameDef);
-        // if(inserted == false && symbolTable.scope_stack.size() > 1) {
-        //         nameDef = symbolTable.lookup(name);
-        //         return nameDef;
-        // }
         check(inserted, nameDef, "already in table");
         if(nameDef.getType() == Type.VOID) {
             check(false, nameDef, "namedef is void");
@@ -345,10 +337,8 @@ public class TypeChecker implements ASTVisitor{
 
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         Type expr = (Type)returnStatement.getE().visit(this, arg);
-        if (expr == root) {
-            return expr;
-        }
-        throw new TypeCheckException("invalid return type!");
+        check(assignmentCompatability(root, expr), returnStatement, "type of expr and declared type don't match");
+        return expr;
     }
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
@@ -411,6 +401,7 @@ public class TypeChecker implements ASTVisitor{
     public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
          Expr expr = whileStatement.getGuard();
          Type exprType = (Type)expr.visit(this, arg);
+         check(expr.getType() == Type.INT, whileStatement, "Not an int");
          if(exprType != Type.INT) {
              throw new TypeCheckException("while loop isn't equal to an integer");
          }
@@ -422,6 +413,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
+        Type expr = (Type) statementWrite.getE().visit(this, arg);
         return null;
     }
 
@@ -433,9 +425,9 @@ public class TypeChecker implements ASTVisitor{
     private boolean assignmentCompatability(Type lhs, Type rhs) {
         return (lhs == rhs || lhs == Type.IMAGE && rhs == Type.PIXEL ||
          lhs == Type.IMAGE && rhs == Type.STRING ||
-         lhs == Type.PIXEL && rhs == Type.INT || 
+         lhs == Type.PIXEL && rhs == Type.INT ||
          lhs == Type.INT && rhs == Type.PIXEL ||
          lhs == Type.STRING && (rhs == Type.INT || rhs == Type.PIXEL || rhs == Type.IMAGE));
     }
-    
+
 }
