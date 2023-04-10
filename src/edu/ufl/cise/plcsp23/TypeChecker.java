@@ -262,12 +262,12 @@ public class TypeChecker implements ASTVisitor{
         Ident ident = lValue.getIdent();
         String name = ident.getName();
         PixelSelector px = lValue.getPixelSelector();
-        NameDef def = symbolTable.lookup(name);
-        check(def != null, lValue, "no work");
         if(px != null) {
             px.visit(this, arg);
-            return px;
+            return Type.PIXEL;
         }
+        NameDef def = symbolTable.lookup(name);
+        check(def != null, lValue, "no work");
         return def.getType();
     }
 
