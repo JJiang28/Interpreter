@@ -41,38 +41,33 @@ public class CodeGeneration implements ASTVisitor {
         System.out.println(expr0);
         Kind kind = binaryExpr.getOp();
         String op = "";
-        if(kind == Kind.PLUS){op += "+";}
-        if(kind == Kind.MINUS){op += "-";}
-        if(kind == Kind.TIMES){op += "*";}
-        if(kind == Kind.DIV){op += "/";}
-        if(kind == Kind.MOD){op += "%";}
-        if(kind == Kind.LT){
-            expr0 = "(" + expr0 + "<" + expr1 + ")" + "?1:0";
-            return expr0;
+        Boolean boolin = false; // op takes a boolean
+        Boolean boolout = true; // op returns a boolean
+        if(kind == Kind.PLUS){op += "+"; boolout = false;}
+        if(kind == Kind.MINUS){op += "-"; boolout = false;}
+        if(kind == Kind.TIMES){op += "*"; boolout = false;}
+        if(kind == Kind.DIV){op += "/"; boolout = false;}
+        if(kind == Kind.MOD){op += "%"; boolout = false;}
+        if(kind == Kind.LT){op += "<";}
+        if(kind == Kind.GT){op += ">";}
+        if(kind == Kind.LE){op += "<=";}
+        if(kind == Kind.GE){op += ">=";}
+        if(kind == Kind.EQ){op += "==";}
+        if(kind == Kind.BITOR){op += "|"; boolout = false;}
+        if(kind == Kind.OR){op += "||"; boolin = true;}
+        if(kind == Kind.AND){op += "&"; boolout = false;}
+        if(kind == Kind.BITAND){op += "&&"; boolin = true;}
+        if(kind == Kind.EXP){
+            op += "**";
+            imports.add("import java.lang.Math.*;\n");
+            return "(int) Math.pow(" + expr0 + ", " + expr1 + ")";
         }
-        if(kind == Kind.GT){
-            expr0 = "(" + expr0 + ">" + expr1 + ")" + "?1:0";
-            return expr0;
-        }
-        if(kind == Kind.LE){
-            expr0 = "(" + expr0 + "<=" + expr1 + ")" + "?1:0";
-            return expr0;
-        }
-        if(kind == Kind.GE){
-            expr0 = "(" + expr0 + ">=" + expr1 + ")" + "?1:0";
-            return expr0;
-        }
-        if(kind == Kind.EQ){
-            expr0 = "(" + expr0 + "==" + expr1 + ")" + "?1:0";
-            return expr0;
-        }
-        if(kind == Kind.BITOR){op += "|";}
-        if(kind == Kind.OR){op += "||";}
-        if(kind == Kind.AND){op += "&";}
-        if(kind == Kind.BITAND){op += "&&";}
-        if(kind == Kind.EXP){op += "**";}
-
-        return expr0 + op + expr1;
+        String binStr = "(" + expr0 + op + expr1 + ")";
+        if (boolin)
+            binStr = "((" + expr0 + " != 0) " + op + " (" + expr1 + " != 0))";
+        if (boolout) 
+            binStr = "(" + binStr + " ? 1 : 0)";
+        return binStr;
      }
  
 	 public Object visitBlock(Block block, Object arg) throws PLCException {
@@ -96,14 +91,8 @@ public class CodeGeneration implements ASTVisitor {
 		String guard = conditionalExpr.getGuard().visit(this, arg).toString();
 		String trueCase = conditionalExpr.getTrueCase().visit(this, arg).toString();
 		String falseCase = conditionalExpr.getFalseCase().visit(this, arg).toString();
-        if(conditionalExpr.getGuard().getType() == Type.INT && conditionalExpr.getTrueCase().getType() == Type.INT) {
-            guard = "(" + guard + ">" + "0" + ")";
-        }
-        if(conditionalExpr.getTrueCase().getType() != Type.INT) {
-            guard = guard.replaceAll("\\?1:0", "");
-        }
-        String conditionalStr = "(" + guard + "?" + trueCase + ":" + falseCase + ")";
-        return conditionalStr; 
+        String conditionalStr = "((" + guard + "!= 0) ?" + trueCase + ":" + falseCase + ")";
+        return conditionalStr;
 	}
  
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
@@ -229,12 +218,24 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
         Kind oper = unaryExpr.getOp();
         String op = "";
+        String expr = unaryExpr.getE().visit(this, arg).toString();
         if (oper == Kind.BANG) op = "!";
         if (oper == Kind.MINUS) op = "-";
-        if (oper == Kind.BANG) op = "sin";
-        if (oper == Kind.BANG) op = "cos";
-        if (oper == Kind.BANG) op = "atan";
-        String expr = unaryExpr.getE().visit(this, arg).toString();
+        if (oper == Kind.BANG) {
+            op = "sin";
+            imports.add("import java.lang.Math.*;\n");
+            return "Math.sin(" + expr + ")";
+        }
+        if (oper == Kind.BANG) {
+            op = "cos";
+            imports.add("import java.lang.Math.*;\n");
+            return "Math.cos(" + expr + ")";
+        }
+        if (oper == Kind.BANG) {
+            op = "atan";
+            imports.add("import java.lang.Math.*;\n");
+            return "Math.atan(" + expr + ")";
+        }
         return op + "(" + expr + ")";
      }
  
@@ -247,7 +248,7 @@ public class CodeGeneration implements ASTVisitor {
         String block = whileStatement.getBlock().visit(this, arg).toString();
         if(whileStatement.getGuard().getType() == Type.INT) {
             int index = expr.indexOf("?");
-            expr = expr.substring(0, index);
+            expr = expr.substring(1, index);
         }
         String whileStr = "while (" + expr + ") {\n" +
                         block + "\n" +
