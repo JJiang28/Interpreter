@@ -38,6 +38,7 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         String expr0 = binaryExpr.getLeft().visit(this, arg).toString();
         String expr1 = binaryExpr.getRight().visit(this, arg).toString();
+        System.out.println(expr0);
         Kind kind = binaryExpr.getOp();
         String op = "";
         if(kind == Kind.PLUS){op += "+";}
@@ -45,11 +46,26 @@ public class CodeGeneration implements ASTVisitor {
         if(kind == Kind.TIMES){op += "*";}
         if(kind == Kind.DIV){op += "/";}
         if(kind == Kind.MOD){op += "%";}
-        if(kind == Kind.LT){op += "<";}
-        if(kind == Kind.GT){op += ">";}
-        if(kind == Kind.LE){op += "<=";}
-        if(kind == Kind.GE){op += ">=";}
-        if(kind == Kind.EQ){op += "==";}
+        if(kind == Kind.LT){
+            expr0 = "(" + expr0 + "<" + expr1 + ")" + "?1:0";
+            return expr0;
+        }
+        if(kind == Kind.GT){
+            expr0 = "(" + expr0 + ">" + expr1 + ")" + "?1:0";
+            return expr0;
+        }
+        if(kind == Kind.LE){
+            expr0 = "(" + expr0 + "<=" + expr1 + ")" + "?1:0";
+            return expr0;
+        }
+        if(kind == Kind.GE){
+            expr0 = "(" + expr0 + ">=" + expr1 + ")" + "?1:0";
+            return expr0;
+        }
+        if(kind == Kind.EQ){
+            expr0 = "(" + expr0 + "==" + expr1 + ")" + "?1:0";
+            return expr0;
+        }
         if(kind == Kind.BITOR){op += "|";}
         if(kind == Kind.OR){op += "||";}
         if(kind == Kind.AND){op += "&";}
@@ -80,8 +96,14 @@ public class CodeGeneration implements ASTVisitor {
 		String guard = conditionalExpr.getGuard().visit(this, arg).toString();
 		String trueCase = conditionalExpr.getTrueCase().visit(this, arg).toString();
 		String falseCase = conditionalExpr.getFalseCase().visit(this, arg).toString();
+        if(conditionalExpr.getGuard().getType() == Type.INT && conditionalExpr.getTrueCase().getType() == Type.INT) {
+            guard = "(" + guard + ">" + "0" + ")";
+        }
+        if(conditionalExpr.getTrueCase().getType() != Type.INT) {
+            guard = guard.replaceAll("\\?1:0", "");
+        }
         String conditionalStr = "(" + guard + "?" + trueCase + ":" + falseCase + ")";
-        return conditionalStr;
+        return conditionalStr; 
 	}
  
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
@@ -223,6 +245,10 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
         String expr = whileStatement.getGuard().visit(this, arg).toString();
         String block = whileStatement.getBlock().visit(this, arg).toString();
+        if(whileStatement.getGuard().getType() == Type.INT) {
+            int index = expr.indexOf("?");
+            expr = expr.substring(0, index);
+        }
         String whileStr = "while (" + expr + ") {\n" +
                         block + "\n" +
                         "}";
