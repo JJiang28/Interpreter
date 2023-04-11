@@ -16,6 +16,7 @@ public class TypeChecker implements ASTVisitor{
     public static class SymbolTable {
         private HashMap<String, NameDef> globalSymbols;
         private Stack<HashMap<String, NameDef>> scope_stack;
+        //private HashMap<String, Integer> variableScope;
 
         void enterScope() {
             scope_stack.push(new HashMap<>());
@@ -27,10 +28,15 @@ public class TypeChecker implements ASTVisitor{
         public SymbolTable() {
             globalSymbols = new HashMap<>();
             scope_stack = new Stack<>();
+            //variableScope = new HashMap<>();
             enterScope();
         }
 
         public boolean insert(String name, NameDef desc) {
+            // String uniquename = name + "_" + scope_stack.size();
+            // if(variableScope.get(uniquename) == null && scope_stack.peek().get(name) == null) {
+            //     variableScope.put(uniquename, scope_stack.size());
+            // }
             return (scope_stack.peek().putIfAbsent(name, desc) == null);
         }
 
@@ -262,6 +268,8 @@ public class TypeChecker implements ASTVisitor{
         Ident ident = lValue.getIdent();
         String name = ident.getName();
         PixelSelector px = lValue.getPixelSelector();
+        // System.out.println(lValue.getLine());
+        // System.out.println(name);
         if(px != null) {
             px.visit(this, arg);
             return Type.PIXEL;
@@ -283,6 +291,7 @@ public class TypeChecker implements ASTVisitor{
             nameDef.getDimension().visit(this, arg);
         }
         String name = nameDef.getIdent().getName();
+        //name = name + "_" + symbolTable.scope_stack.size();
         boolean inserted = symbolTable.insert(name, nameDef);
         check(inserted, nameDef, "already in table");
         if(nameDef.getType() == Type.VOID) {
@@ -297,6 +306,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
+        // System.out.println("Running");
         PixelSelector px = pixelFuncExpr.getSelector();
         px.visit(this, arg);
         pixelFuncExpr.setType(Type.INT);
@@ -304,6 +314,8 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
+        // System.out.println(pixelSelector.getLine());
+        // System.out.println(pixelSelector.getFirstToken().getTokenString());
         Type x = (Type)pixelSelector.getX().visit(this, arg);
         Type y = (Type)pixelSelector.getY().visit(this, arg);
         if (x == Type.INT && y == Type.INT) {
@@ -340,6 +352,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
+        System.out.println("running");
         Type expr = (Type)returnStatement.getE().visit(this, arg);
         check(assignmentCompatability(root, expr), returnStatement, "type of expr and declared type don't match");
         return expr;
@@ -376,8 +389,15 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+        // System.out.println("running");
+        // System.out.println(unaryExprPostfix.getLine());
         Type primary = (Type)unaryExprPostfix.getPrimary().visit(this, arg);
+        // System.out.println(unaryExprPostfix.getFirstToken().getTokenString());
+        // System.out.println(unaryExprPostfix.getType());
         boolean hasPix = (unaryExprPostfix.getPixel() != null);
+        if(hasPix) {
+            unaryExprPostfix.getPixel().visit(this, arg);
+        }
         boolean hasChan = (unaryExprPostfix.getColor() != null);
         if (primary == Type.PIXEL) {
             if (!hasPix && hasChan) {

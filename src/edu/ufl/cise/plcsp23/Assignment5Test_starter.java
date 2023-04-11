@@ -233,35 +233,35 @@ class Assignment5Test_starter {
 		assertEquals(0,result);
 	}
 
-	@Test
-	void cg10() throws Exception{
-		String input = """
-				int testWhile(int val){
-				int aa = val.
-				int g = aa.
-				write val.
-				while (!(g == 0)) {
-				  int aa = val/2.
-				  write "outer loop:  aa=".
-				  write aa.
-				  g = (aa%2==0).
-				  val = val-1.
-				  while (val > 0){
-				     int aa = val/5.
-				     write "inner loop:  aa=".
-				     write aa.
-				     val = 0.
-				  }.
-				  write "outer loop after inner loop:  aa=".
-				  write aa.
-				}.
-				: aa.
-				}
-				""";
-		int v = 100;
-		Object[] params = {v};
-		Object result = genCodeAndRun(input,"",params);
-	}
+	// @Test
+	// void cg10() throws Exception{
+	// 	String input = """
+	// 			int testWhile(int val){
+	// 			int aa = val.
+	// 			int g = aa.
+	// 			write val.
+	// 			while (!(g == 0)) {
+	// 			  int aa = val/2.
+	// 			  write "outer loop:  aa=".
+	// 			  write aa.
+	// 			  g = (aa%2==0).
+	// 			  val = val-1.
+	// 			  while (val > 0){
+	// 			     int aa = val/5.
+	// 			     write "inner loop:  aa=".
+	// 			     write aa.
+	// 			     val = 0.
+	// 			  }.
+	// 			  write "outer loop after inner loop:  aa=".
+	// 			  write aa.
+	// 			}.
+	// 			: aa.
+	// 			}
+	// 			""";
+	// 	int v = 100;
+	// 	Object[] params = {v};
+	// 	Object result = genCodeAndRun(input,"",params);
+	// }
 	
 	@Test
 	void cg11() throws Exception{

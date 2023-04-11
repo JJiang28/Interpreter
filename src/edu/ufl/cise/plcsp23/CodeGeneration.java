@@ -74,7 +74,7 @@ public class CodeGeneration implements ASTVisitor {
         List<String> blockList = new ArrayList<>();
         List<Declaration> dec = block.getDecList();
         for (Declaration node: dec) {
-            blockList.add((String) node.visit(this, arg));
+            blockList.add( node.visit(this, arg).toString());
         }
         List<Statement> state = block.getStatementList();
         for (Statement node: state) {
@@ -98,10 +98,10 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nDef = declaration.getNameDef();
         Expr initializer = declaration.getInitializer();
-        String nDefStr = (String) nDef.visit(this, arg);
+        String nDefStr = nDef.visit(this, arg).toString();
         String initString;
         if (initializer != null) {
-            initString = (String) initializer.visit(this, arg);
+            initString = initializer.visit(this, arg).toString();
             return nDefStr + " = " + initString + ";\n";
         }
         return nDefStr + ";\n";
@@ -163,9 +163,9 @@ public class CodeGeneration implements ASTVisitor {
         String typeStr = typeToString(type);
         List<String> paramStrs = new ArrayList<>();
         for (int i = 0; i < params.size(); i++) {
-            paramStrs.add((String) params.get(i).visit(this, arg)); // TODO: see if casting works
+            paramStrs.add(params.get(i).visit(this, arg).toString()); // TODO: see if casting works
         }
-        String blockStr = (String) block.visit(this, arg);
+        String blockStr = block.visit(this, arg).toString();
 
         System.out.println(typeStr);
 
@@ -260,7 +260,7 @@ public class CodeGeneration implements ASTVisitor {
  
 	 public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         Expr expr = statementWrite.getE();
-        String exprStr = (String) expr.visit(this, arg);
+        String exprStr = expr.visit(this, arg).toString();
         imports.add("import edu.ufl.cise.plcsp23.runtime.ConsoleIO;\n");
         return "ConsoleIO.write(" + exprStr + ");\n";
      }
