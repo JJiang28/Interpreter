@@ -32,7 +32,7 @@ public class CodeGeneration implements ASTVisitor {
         Expr expr = statementAssign.getE();
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
-        return lvStr + " = " + exprStr;
+        return lvStr + " = " + exprStr + ";";
     }
  
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
@@ -156,10 +156,6 @@ public class CodeGeneration implements ASTVisitor {
         }
         String blockStr = (String) block.visit(this, arg);
 
-        if (typeStr.equals("string")) {
-            typeStr = "String";
-        }
-
         System.out.println(typeStr);
 
         String code = "public class " + name + " {\n" +
@@ -184,6 +180,11 @@ public class CodeGeneration implements ASTVisitor {
                     blockStr + "}" + "\n}";
         }
 
+        String importStr = "";
+        for (String imp: imports) {
+            importStr += imp + "\n";
+        }
+        code = importStr + code;
         return code;
      }
  
@@ -212,15 +213,18 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
-        Expr expr = whileStatement.getGuard();
-        Block block = whileStatement.getBlock();
-        throw new UnsupportedOperationException();
+        String expr = whileStatement.getGuard().visit(this, arg).toString();
+        String block = whileStatement.getBlock().visit(this, arg).toString();
+        String whileStr = "while (" + expr + ") {\n" +
+                        block + "\n" +
+                        "}";
+        return whileStr;
      }
  
 	 public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         Expr expr = statementWrite.getE();
         String exprStr = (String) expr.visit(this, arg);
-        imports.add("import edu.ufl.cise.plcsp23.image.ConsoleIO;");
+        imports.add("import edu.ufl.cise.plcsp23.runtime.ConsoleIO;");
         return "ConsoleIO.write(" + exprStr + ");";
      }
  
