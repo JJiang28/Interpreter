@@ -1,11 +1,9 @@
 package edu.ufl.cise.plcsp23;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import edu.ufl.cise.plcsp23.ast.*;
+import edu.ufl.cise.plcsp23.IToken.Kind;
 
 public class CodeGeneration implements ASTVisitor {
     public Set<String> imports = new HashSet<>();
@@ -26,7 +24,25 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         String expr0 = binaryExpr.getLeft().visit(this, arg).toString();
         String expr1 = binaryExpr.getRight().visit(this, arg).toString();
-        throw new UnsupportedOperationException();
+        Kind kind = binaryExpr.getOp();
+        String op = "";
+        if(kind == Kind.PLUS){op += "+";}
+        if(kind == Kind.MINUS){op += "-";}
+        if(kind == Kind.TIMES){op += "*";}
+        if(kind == Kind.DIV){op += "/";}
+        if(kind == Kind.MOD){op += "%";}
+        if(kind == Kind.LT){op += "<";}
+        if(kind == Kind.GT){op += ">";}
+        if(kind == Kind.LE){op += "<=";}
+        if(kind == Kind.GE){op += ">=";}
+        if(kind == Kind.EQ){op += "==";}
+        if(kind == Kind.BITOR){op += "|";}
+        if(kind == Kind.OR){op += "||";}
+        if(kind == Kind.AND){op += "&";}
+        if(kind == Kind.BITAND){op += "&&";}
+        if(kind == Kind.EXP){op += "**";}
+
+        return expr0 + op + expr1;
      }
  
 	 public Object visitBlock(Block block, Object arg) throws PLCException {
@@ -122,8 +138,21 @@ public class CodeGeneration implements ASTVisitor {
         }
         String blockStr = (String) block.visit(this, arg);
 
+        if (typeStr.equals("string")) {
+            typeStr = "String";
+        }
+
+        System.out.println(typeStr);
+
         String code = "public class " + name + " {\n" +
                     "public static " + typeStr + " apply(";
+
+         for (int i = 0; i < paramStrs.size(); i++) {
+             String str = paramStrs.get(i);
+             str = str.replaceAll("(?i)string", "String"); // (?i) makes the search case-insensitive
+             paramStrs.set(i, str);
+         }
+
         for (int i = 0; i < paramStrs.size()-1; i++) {
             code += paramStrs.get(i) + ", ";
         }
@@ -134,7 +163,7 @@ public class CodeGeneration implements ASTVisitor {
 
         if(paramStrs.size() > 0) {
             code += paramStrs.get(paramStrs.size() - 1) + ") {\n" +
-                    blockStr + "}";
+                    blockStr + "}" + "\n}";
         }
 
         return code;
