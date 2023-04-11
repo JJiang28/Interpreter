@@ -4,6 +4,7 @@ import java.util.*;
 
 import edu.ufl.cise.plcsp23.ast.*;
 import edu.ufl.cise.plcsp23.IToken.Kind;
+import edu.ufl.cise.plcsp23.TypeChecker.SymbolTable;;
 
 public class CodeGeneration implements ASTVisitor {
     public Set<String> imports = new HashSet<>();
@@ -27,6 +28,8 @@ public class CodeGeneration implements ASTVisitor {
         }
     }
 
+    SymbolTable symbolTable = new SymbolTable();
+
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         LValue LV = statementAssign.getLv();
         Expr expr = statementAssign.getE();
@@ -38,7 +41,6 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         String expr0 = binaryExpr.getLeft().visit(this, arg).toString();
         String expr1 = binaryExpr.getRight().visit(this, arg).toString();
-        System.out.println(expr0);
         Kind kind = binaryExpr.getOp();
         String op = "";
         Boolean boolin = false; // op takes a boolean
@@ -163,11 +165,12 @@ public class CodeGeneration implements ASTVisitor {
         String typeStr = typeToString(type);
         List<String> paramStrs = new ArrayList<>();
         for (int i = 0; i < params.size(); i++) {
-            paramStrs.add(params.get(i).visit(this, arg).toString()); // TODO: see if casting works
+            // paramStrs.add(symbolTable.getUniqueString(params.get(i).getIdent())); // TODO: see if casting works
+            paramStrs.add(params.get(i).visit(this, arg).toString());
         }
         String blockStr = block.visit(this, arg).toString();
 
-        System.out.println(typeStr);
+        //System.out.println(typeStr);
 
         String code = "public class " + name + " {\n" +
                     "public static " + typeStr + " apply(";

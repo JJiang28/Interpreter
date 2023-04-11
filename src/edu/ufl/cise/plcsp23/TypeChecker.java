@@ -14,9 +14,9 @@ import javax.naming.Name;
 public class TypeChecker implements ASTVisitor{
 
     public static class SymbolTable {
-        private HashMap<String, NameDef> globalSymbols;
-        private Stack<HashMap<String, NameDef>> scope_stack;
-        //private HashMap<String, Integer> variableScope;
+        public HashMap<String, NameDef> globalSymbols;
+        public Stack<HashMap<String, NameDef>> scope_stack;
+        private HashMap<Ident, String> uniqueNames;
 
         void enterScope() {
             scope_stack.push(new HashMap<>());
@@ -28,15 +28,11 @@ public class TypeChecker implements ASTVisitor{
         public SymbolTable() {
             globalSymbols = new HashMap<>();
             scope_stack = new Stack<>();
-            //variableScope = new HashMap<>();
+            uniqueNames = new HashMap<>();
             enterScope();
         }
 
         public boolean insert(String name, NameDef desc) {
-            // String uniquename = name + "_" + scope_stack.size();
-            // if(variableScope.get(uniquename) == null && scope_stack.peek().get(name) == null) {
-            //     variableScope.put(uniquename, scope_stack.size());
-            // }
             return (scope_stack.peek().putIfAbsent(name, desc) == null);
         }
 
@@ -44,10 +40,20 @@ public class TypeChecker implements ASTVisitor{
             for (int i = scope_stack.size() - 1; i >= 0; i--) {
                 HashMap<String, NameDef> symbolTable = scope_stack.get(i);
                 if(symbolTable.containsKey(name)) {
+                    NameDef def = symbolTable.get(name);
+                    def.getIdent().setName(name + "_" + i);
                     return symbolTable.get(name);
                 }
             }
-            return globalSymbols.get(name);
+            return globalSymbols.get(name); //add scope level to variable name
+        }
+        public String getUniqueString(Ident ident) {
+            String uniqueName = uniqueNames.get(ident);
+            if (uniqueName == null) {
+                uniqueName = ident.getName() + scope_stack.size();
+                uniqueNames.put(ident, uniqueName);
+            }
+            return uniqueName;
         }
     }
 
@@ -268,8 +274,8 @@ public class TypeChecker implements ASTVisitor{
         Ident ident = lValue.getIdent();
         String name = ident.getName();
         PixelSelector px = lValue.getPixelSelector();
-        // System.out.println(lValue.getLine());
-        // System.out.println(name);
+        System.out.println(lValue.getLine());
+        System.out.println(name);
         if(px != null) {
             px.visit(this, arg);
             return Type.PIXEL;

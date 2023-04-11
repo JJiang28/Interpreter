@@ -42,6 +42,7 @@ public class NameDef extends AST {
 	public Ident getIdent() {
 		return ident;
 	}
+	
 
 	@Override
 	public String toString() {
