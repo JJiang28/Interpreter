@@ -221,17 +221,17 @@ public class CodeGeneration implements ASTVisitor {
         String expr = unaryExpr.getE().visit(this, arg).toString();
         if (oper == Kind.BANG) op = "!";
         if (oper == Kind.MINUS) op = "-";
-        if (oper == Kind.BANG) {
+        if (oper == Kind.RES_sin) {
             op = "sin";
             imports.add("import java.lang.Math.*;\n");
             return "Math.sin(" + expr + ")";
         }
-        if (oper == Kind.BANG) {
+        if (oper == Kind.RES_cos) {
             op = "cos";
             imports.add("import java.lang.Math.*;\n");
             return "Math.cos(" + expr + ")";
         }
-        if (oper == Kind.BANG) {
+        if (oper == Kind.RES_atan) {
             op = "atan";
             imports.add("import java.lang.Math.*;\n");
             return "Math.atan(" + expr + ")";
@@ -248,7 +248,9 @@ public class CodeGeneration implements ASTVisitor {
         String block = whileStatement.getBlock().visit(this, arg).toString();
         if(whileStatement.getGuard().getType() == Type.INT) {
             int index = expr.indexOf("?");
-            expr = expr.substring(1, index);
+            expr = expr.substring(0, index);
+            if (expr.charAt(0) == '(') 
+                expr = expr.substring(1);
         }
         String whileStr = "while (" + expr + ") {\n" +
                         block + "\n" +
