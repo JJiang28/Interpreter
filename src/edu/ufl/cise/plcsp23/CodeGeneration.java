@@ -32,7 +32,7 @@ public class CodeGeneration implements ASTVisitor {
         Expr expr = statementAssign.getE();
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
-        return lvStr + " = " + exprStr + ";";
+        return lvStr + " = " + exprStr + ";\n";
     }
  
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
@@ -91,9 +91,9 @@ public class CodeGeneration implements ASTVisitor {
         String initString;
         if (initializer != null) {
             initString = (String) initializer.visit(this, arg);
-            return nDefStr + " = " + initString + ";";
+            return nDefStr + " = " + initString + ";\n";
         }
-        return nDefStr + ";";
+        return nDefStr + ";\n";
      }
  
 	 public Object visitDimension(Dimension dimension, Object arg) throws PLCException {
@@ -182,21 +182,21 @@ public class CodeGeneration implements ASTVisitor {
 
         String importStr = "";
         for (String imp: imports) {
-            importStr += imp + "\n";
+            importStr += imp;
         }
         code = importStr + code;
         return code;
      }
  
 	 public Object visitRandomExpr(RandomExpr randomExpr, Object arg) throws PLCException {
-        imports.add("import java.lang.Math.*;");
+        imports.add("import java.lang.Math.*;\n");
         return "Math.floor(Math.random() * 256)";
      }
  
 	 public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         Expr expr = returnStatement.getE();
         String exprStr = expr.visit(this, arg).toString();
-        return "return " + exprStr + ";";
+        return "return " + exprStr + ";\n";
      }
  
 	 public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
@@ -205,7 +205,15 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
-        throw new UnsupportedOperationException();
+        Kind oper = unaryExpr.getOp();
+        String op = "";
+        if (oper == Kind.BANG) op = "!";
+        if (oper == Kind.MINUS) op = "-";
+        if (oper == Kind.BANG) op = "sin";
+        if (oper == Kind.BANG) op = "cos";
+        if (oper == Kind.BANG) op = "atan";
+        String expr = unaryExpr.getE().visit(this, arg).toString();
+        return op + "(" + expr + ")";
      }
  
 	 public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
@@ -224,8 +232,8 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitWriteStatement(WriteStatement statementWrite, Object arg) throws PLCException {
         Expr expr = statementWrite.getE();
         String exprStr = (String) expr.visit(this, arg);
-        imports.add("import edu.ufl.cise.plcsp23.runtime.ConsoleIO;");
-        return "ConsoleIO.write(" + exprStr + ");";
+        imports.add("import edu.ufl.cise.plcsp23.runtime.ConsoleIO;\n");
+        return "ConsoleIO.write(" + exprStr + ");\n";
      }
  
 	 public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
