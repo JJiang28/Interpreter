@@ -18,13 +18,15 @@ public class CodeGeneration implements ASTVisitor {
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         LValue LV = statementAssign.getLv();
         Expr expr = statementAssign.getE();
-        String lvStr = (String) LV.visit(this, arg);
-        String exprStr = (String) expr.visit(this, arg);
+        String lvStr = LV.visit(this, arg).toString();
+        String exprStr = expr.visit(this, arg).toString();
         return lvStr + " = " + exprStr;
     }
  
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
-      throw new UnsupportedOperationException();
+        String expr0 = binaryExpr.getLeft().visit(this, arg).toString();
+        String expr1 = binaryExpr.getRight().visit(this, arg).toString();
+        throw new UnsupportedOperationException();
      }
  
 	 public Object visitBlock(Block block, Object arg) throws PLCException {
@@ -35,7 +37,7 @@ public class CodeGeneration implements ASTVisitor {
         }
         List<Statement> state = block.getStatementList();
         for (Statement node: state) {
-            blockList.add((String) node.visit(this, arg));
+            blockList.add(node.visit(this, arg).toString());
         }
         String blockStr = "";
         for (String str: blockList) {
@@ -91,7 +93,7 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
-      throw new UnsupportedOperationException();
+        return numLitExpr.getValue();
     }
  
 	 public Object visitPixelFuncExpr(PixelFuncExpr pixelFuncExpr, Object arg) throws PLCException {
@@ -145,7 +147,7 @@ public class CodeGeneration implements ASTVisitor {
  
 	 public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         Expr expr = returnStatement.getE();
-        String exprStr = (String) expr.visit(this, arg);
+        String exprStr = expr.visit(this, arg).toString();
         return "return " + exprStr + ";";
      }
  
