@@ -13,6 +13,20 @@ public class CodeGeneration implements ASTVisitor {
         all = pack;
     }
 
+    public String typeToString(Type type) {
+        switch(type) {
+            case INT, VOID -> {
+                return type.toString().toLowerCase();
+            }
+            case STRING -> {
+                return "String";
+            }
+            default -> {
+                return null;
+            }
+        }
+    }
+
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         LValue LV = statementAssign.getLv();
         Expr expr = statementAssign.getE();
@@ -62,9 +76,13 @@ public class CodeGeneration implements ASTVisitor {
         return blockStr;
      }
  
-	 public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
-      throw new UnsupportedOperationException();
-     }
+	public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws PLCException {
+		String guard = conditionalExpr.getGuard().visit(this, arg).toString();
+		String trueCase = conditionalExpr.getTrueCase().visit(this, arg).toString();
+		String falseCase = conditionalExpr.getFalseCase().visit(this, arg).toString();
+        String conditionalStr = "(" + guard + "?" + trueCase + ":" + falseCase + ")";
+        return conditionalStr;
+	}
  
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nDef = declaration.getNameDef();
@@ -103,7 +121,7 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
         Type type = nameDef.getType();
         Ident ident = nameDef.getIdent();
-        String typeStr = type.toString().toLowerCase();
+        String typeStr = typeToString(type);
         String name = ident.getName();
         return typeStr + " " + name;
      }
@@ -131,7 +149,7 @@ public class CodeGeneration implements ASTVisitor {
         Block block = program.getBlock();
 
         String name = ident.getName();
-        String typeStr = type.toString().toLowerCase();
+        String typeStr = typeToString(type);
         List<String> paramStrs = new ArrayList<>();
         for (int i = 0; i < params.size(); i++) {
             paramStrs.add((String) params.get(i).visit(this, arg)); // TODO: see if casting works
@@ -181,7 +199,8 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
-        return stringLitExpr.toString(); //TODO: look at this pls
+        String strStr = "\""+ stringLitExpr.getValue() + "\""; //TODO: look at this pls
+        return strStr;
      }
  
 	 public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws PLCException {
