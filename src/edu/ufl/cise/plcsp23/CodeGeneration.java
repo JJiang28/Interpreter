@@ -34,8 +34,15 @@ public class CodeGeneration implements ASTVisitor {
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         LValue LV = statementAssign.getLv();
         Expr expr = statementAssign.getE();
+        Type lvType = symbolTable.lookup(LV.getIdent().getName()).getType();
+        Type exprType = expr.getType();
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
+        if (lvType != exprType) {
+            if (lvType == Type.STRING) {    
+                exprStr = "\"" + exprStr + "\"";
+            }
+        }
         return lvStr + " = " + exprStr + ";\n";
     }
  
@@ -108,6 +115,11 @@ public class CodeGeneration implements ASTVisitor {
         String initString;
         if (initializer != null) {
             initString = initializer.visit(this, arg).toString();
+            if (nDef.getType() != initializer.getType()) {
+                if (nDef.getType() == Type.STRING) {
+                    initString = "\"" + initString + "\"";
+                }
+            }
             return nDefStr + " = " + initString + ";\n";
         }
         return nDefStr + ";\n";
@@ -140,7 +152,7 @@ public class CodeGeneration implements ASTVisitor {
         Ident ident = nameDef.getIdent();
         String typeStr = typeToString(type);
         String name = ident.getName();
-        //symbolTable.lookup(name);
+        symbolTable.insert(name, nameDef);
         return typeStr + " " + name + "_" + symbolTable.scope_stack.size();
      }
      
@@ -220,10 +232,8 @@ public class CodeGeneration implements ASTVisitor {
         Expr expr = returnStatement.getE();
         String exprStr = expr.visit(this, arg).toString();
         if (expr.getType() != returnType) {
-            if (expr.getType() == Type.INT) {
-                if (returnType == Type.STRING) {
-                    exprStr = "\"" + exprStr + "\"";
-                }
+            if (returnType == Type.STRING) {
+                exprStr = "\"" + exprStr + "\"";
             }
         }
         return "return " + exprStr + ";\n";
