@@ -42,6 +42,7 @@ public class CompilerComponentFactory {
 	}
 
 	public static ASTVisitor makeCodeGenerator(String pack) {
+		System.out.println("Entering code gen");
 		return new CodeGeneration(pack);
 	}
 }

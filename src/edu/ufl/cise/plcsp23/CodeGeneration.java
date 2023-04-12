@@ -4,9 +4,11 @@ import java.util.*;
 
 import edu.ufl.cise.plcsp23.ast.*;
 import edu.ufl.cise.plcsp23.IToken.Kind;
+import edu.ufl.cise.plcsp23.TypeChecker.SymbolTable;
 
 public class CodeGeneration implements ASTVisitor {
     public Set<String> imports = new HashSet<>();
+    Type returnType;
     String all;
 
     public CodeGeneration(String pack) {
@@ -27,18 +29,26 @@ public class CodeGeneration implements ASTVisitor {
         }
     }
 
+    SymbolTable symbolTable = new SymbolTable();
+
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
         LValue LV = statementAssign.getLv();
         Expr expr = statementAssign.getE();
+        Type lvType = symbolTable.lookup(LV.getIdent().getName()).getType();
+        Type exprType = expr.getType();
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
+        if (lvType != exprType) {
+            if (lvType == Type.STRING) {    
+                exprStr = "\"" + exprStr + "\"";
+            }
+        }
         return lvStr + " = " + exprStr + ";\n";
     }
  
 	 public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws PLCException {
         String expr0 = binaryExpr.getLeft().visit(this, arg).toString();
         String expr1 = binaryExpr.getRight().visit(this, arg).toString();
-        System.out.println(expr0);
         Kind kind = binaryExpr.getOp();
         String op = "";
         Boolean boolin = false; // op takes a boolean
@@ -74,10 +84,12 @@ public class CodeGeneration implements ASTVisitor {
         List<String> blockList = new ArrayList<>();
         List<Declaration> dec = block.getDecList();
         for (Declaration node: dec) {
+            //symbolTable.lookup(node.getNameDef().getIdent().getName());
             blockList.add( node.visit(this, arg).toString());
         }
         List<Statement> state = block.getStatementList();
         for (Statement node: state) {
+            //symbolTable.lookup(node.firstToken.getTokenString());
             blockList.add(node.visit(this, arg).toString());
         }
         String blockStr = "";
@@ -98,10 +110,16 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nDef = declaration.getNameDef();
         Expr initializer = declaration.getInitializer();
+        //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
         String initString;
         if (initializer != null) {
             initString = initializer.visit(this, arg).toString();
+            if (nDef.getType() != initializer.getType()) {
+                if (nDef.getType() == Type.STRING) {
+                    initString = "\"" + initString + "\"";
+                }
+            }
             return nDefStr + " = " + initString + ";\n";
         }
         return nDefStr + ";\n";
@@ -120,13 +138,14 @@ public class CodeGeneration implements ASTVisitor {
     }
  
 	 public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
-        return identExpr.getName();
+        String name = identExpr.getName();
+        return name + "_" + symbolTable.findScope(name);
      }
  
 	 public Object visitLValue(LValue lValue, Object arg) throws PLCException {
         Ident ident = lValue.getIdent();
         String name = ident.getName();
-        return name;
+        return name + "_" + symbolTable.findScope(name);
      }
  
 	 public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
@@ -134,9 +153,10 @@ public class CodeGeneration implements ASTVisitor {
         Ident ident = nameDef.getIdent();
         String typeStr = typeToString(type);
         String name = ident.getName();
-        return typeStr + " " + name;
+        symbolTable.insert(name, nameDef);
+        return typeStr + " " + name + "_" + symbolTable.findScope(name);
      }
- 
+     
 	 public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
         return numLitExpr.getValue();
     }
@@ -154,20 +174,24 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitProgram(Program program, Object arg) throws PLCException {
+        
         Ident ident = program.getIdent();
         Type type = program.getType();
+        returnType = type;
         List<NameDef> params = program.getParamList();
         Block block = program.getBlock();
+        System.out.println(symbolTable.scope_stack.size());
 
         String name = ident.getName();
         String typeStr = typeToString(type);
         List<String> paramStrs = new ArrayList<>();
         for (int i = 0; i < params.size(); i++) {
-            paramStrs.add(params.get(i).visit(this, arg).toString()); // TODO: see if casting works
+            // paramStrs.add(symbolTable.getUniqueString(params.get(i).getIdent())); // TODO: see if casting works
+            paramStrs.add(params.get(i).visit(this, arg).toString());
         }
         String blockStr = block.visit(this, arg).toString();
 
-        System.out.println(typeStr);
+        //System.out.println(typeStr);
 
         String code = "public class " + name + " {\n" +
                     "public static " + typeStr + " apply(";
@@ -196,6 +220,7 @@ public class CodeGeneration implements ASTVisitor {
             importStr += imp;
         }
         code = importStr + code;
+        symbolTable.closeScope();
         return code;
      }
  
@@ -207,6 +232,11 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         Expr expr = returnStatement.getE();
         String exprStr = expr.visit(this, arg).toString();
+        if (expr.getType() != returnType) {
+            if (returnType == Type.STRING) {
+                exprStr = "\"" + exprStr + "\"";
+            }
+        }
         return "return " + exprStr + ";\n";
      }
  
@@ -245,7 +275,9 @@ public class CodeGeneration implements ASTVisitor {
  
 	 public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
         String expr = whileStatement.getGuard().visit(this, arg).toString();
+        symbolTable.enterScope();
         String block = whileStatement.getBlock().visit(this, arg).toString();
+        symbolTable.closeScope();
         if(whileStatement.getGuard().getType() == Type.INT) {
             int index = expr.indexOf("?");
             expr = expr.substring(0, index);

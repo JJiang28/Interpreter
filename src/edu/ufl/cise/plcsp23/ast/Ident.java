@@ -16,9 +16,13 @@ import edu.ufl.cise.plcsp23.PLCException;
 public class Ident extends AST {
 	
 	NameDef def;
+	String identName = "";
+	int size;
 
 	public Ident(IToken firstToken) {
 		super(firstToken);
+		identName = firstToken.getTokenString();
+		size = 0;
 	}
 
 	@Override
@@ -27,7 +31,7 @@ public class Ident extends AST {
 	}
 	
 	public String getName() {
-		return firstToken.getTokenString();
+		return identName;
 	}
 
 	public NameDef getDef() {
@@ -36,6 +40,18 @@ public class Ident extends AST {
 
 	public void setDef(NameDef def) {
 		this.def = def;
+	}
+
+	public void setName(String something) {
+		identName = something;
+	}
+
+	public void addInstance(){
+		size++;
+	}
+
+	public int getSize(){
+		return this.size;
 	}
 
 	@Override
