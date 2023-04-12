@@ -8,6 +8,7 @@ import edu.ufl.cise.plcsp23.TypeChecker.SymbolTable;
 
 public class CodeGeneration implements ASTVisitor {
     public Set<String> imports = new HashSet<>();
+    Type returnType;
     String all;
 
     public CodeGeneration(String pack) {
@@ -163,6 +164,7 @@ public class CodeGeneration implements ASTVisitor {
         
         Ident ident = program.getIdent();
         Type type = program.getType();
+        returnType = type;
         List<NameDef> params = program.getParamList();
         Block block = program.getBlock();
         System.out.println(symbolTable.scope_stack.size());
@@ -217,6 +219,13 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
         Expr expr = returnStatement.getE();
         String exprStr = expr.visit(this, arg).toString();
+        if (expr.getType() != returnType) {
+            if (expr.getType() == Type.INT) {
+                if (returnType == Type.STRING) {
+                    exprStr = "\"" + exprStr + "\"";
+                }
+            }
+        }
         return "return " + exprStr + ";\n";
      }
  
