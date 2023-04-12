@@ -410,7 +410,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
-        // System.out.println("running");
+        //System.out.println("running");
         // System.out.println(unaryExprPostfix.getLine());
         Type primary = (Type)unaryExprPostfix.getPrimary().visit(this, arg);
         // System.out.println(unaryExprPostfix.getFirstToken().getTokenString());

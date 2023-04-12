@@ -278,13 +278,9 @@ public class CodeGeneration implements ASTVisitor {
         symbolTable.enterScope();
         String block = whileStatement.getBlock().visit(this, arg).toString();
         symbolTable.closeScope();
+        
         if(whileStatement.getGuard().getType() == Type.INT) {
-            int index = expr.indexOf("?");
-            expr = expr.substring(0, index);
-            if (expr.charAt(0) == '(') 
-                expr = expr.substring(1);
-
-            //expr = "(" + expr + " != 0)";
+            expr = "(" + expr + " != 0)";
         }
         String whileStr = "while (" + expr + ") {\n" +
                         block + "\n" +

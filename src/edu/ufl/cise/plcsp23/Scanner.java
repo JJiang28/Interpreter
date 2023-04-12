@@ -18,7 +18,6 @@ public class Scanner implements IScanner {
     HashMap<String, Kind> ops = new HashMap<String, Kind>();
 
     public Scanner (String input) {
-        System.out.println("Entering scanner");
         this.input = input;
         this.inputChars = Arrays.copyOf(input.toCharArray(), input.length()+1);
         pos = 0;
@@ -124,6 +123,15 @@ public class Scanner implements IScanner {
                         continue;
                     }
 
+                    if(ch == '"' && inputChars[pos+1] == '"') {
+                        advance();
+                        pos+=1;
+                        ch = inputChars[pos];
+                        column++;
+                        tokens.add(new StringLitToken(pos-1, 0, inputChars, line, column));
+                        return new StringLitToken(pos-1, 0, inputChars, line, column);
+                    }
+
                     if(ch == '"') {
                         state = State.IN_STRING_LIT;
                         continue;
@@ -155,10 +163,6 @@ public class Scanner implements IScanner {
                         state = State.START;
                         tokens.add(new Token(Kind.EOF, index, 1, inputChars, line, column));
                         return new Token(Kind.EOF, index, 1, inputChars, line, column);
-                    }
-                    if (ch == '"') {
-                        state = State.IN_STRING_LIT;
-                        continue;
                     }
                     if (isOp) {
                         state = State.IN_OPERATOR;
