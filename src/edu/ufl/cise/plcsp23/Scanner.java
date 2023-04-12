@@ -18,6 +18,7 @@ public class Scanner implements IScanner {
     HashMap<String, Kind> ops = new HashMap<String, Kind>();
 
     public Scanner (String input) {
+        System.out.println("Entering scanner");
         this.input = input;
         this.inputChars = Arrays.copyOf(input.toCharArray(), input.length()+1);
         pos = 0;

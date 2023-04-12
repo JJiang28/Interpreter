@@ -56,7 +56,7 @@ public class TypeChecker implements ASTVisitor{
             for (int i = scope_stack.size() - 1; i >= 0; i--) {
                 HashMap<String, NameDef> symbolTable = scope_stack.get(i);
                 if(symbolTable.containsKey(name)) {
-                    System.out.println(name + " found!");
+                    //System.out.println(name + " found!");
                     return symbolTable.get(name);
                 }
             }
@@ -289,8 +289,8 @@ public class TypeChecker implements ASTVisitor{
         Ident ident = lValue.getIdent();
         String name = ident.getName();
         PixelSelector px = lValue.getPixelSelector();
-        System.out.println(lValue.getLine());
-        System.out.println(name);
+        // System.out.println(lValue.getLine());
+        // System.out.println(name);
         if(px != null) {
             px.visit(this, arg);
             return Type.PIXEL;
@@ -373,7 +373,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws PLCException {
-        System.out.println("typecheck return");
+        // System.out.println("typecheck return");
         Type expr = (Type)returnStatement.getE().visit(this, arg);
         check(assignmentCompatability(root, expr), returnStatement, "type of expr and declared type don't match");
         return expr;

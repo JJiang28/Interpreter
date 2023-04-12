@@ -180,7 +180,7 @@ public class CodeGeneration implements ASTVisitor {
         returnType = type;
         List<NameDef> params = program.getParamList();
         Block block = program.getBlock();
-        System.out.println(symbolTable.scope_stack.size());
+        //System.out.println(symbolTable.scope_stack.size());
 
         String name = ident.getName();
         String typeStr = typeToString(type);
@@ -283,10 +283,12 @@ public class CodeGeneration implements ASTVisitor {
             expr = expr.substring(0, index);
             if (expr.charAt(0) == '(') 
                 expr = expr.substring(1);
+
+            //expr = "(" + expr + " != 0)";
         }
         String whileStr = "while (" + expr + ") {\n" +
                         block + "\n" +
-                        "}";
+                        "}\n";
         return whileStr;
      }
  

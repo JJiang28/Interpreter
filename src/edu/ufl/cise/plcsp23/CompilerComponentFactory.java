@@ -22,6 +22,7 @@ public class CompilerComponentFactory {
 		return new Scanner(input);
 	}
 	public static IParser makeParser(String input) throws LexicalException {
+		System.out.println("Entering parser");
 		//add code to create a scanner and parser and return the parser
 		Scanner temp = new Scanner(input);
 		List<IToken> tokens = new ArrayList<>();
@@ -38,6 +39,7 @@ public class CompilerComponentFactory {
 	}
 
 	public static TypeChecker makeTypeChecker() {
+		System.out.println("Entering type check");
 		return new TypeChecker();
 	}
 
