@@ -17,10 +17,12 @@ public class Ident extends AST {
 	
 	NameDef def;
 	String identName = "";
+	int size;
 
 	public Ident(IToken firstToken) {
 		super(firstToken);
 		identName = firstToken.getTokenString();
+		size = 0;
 	}
 
 	@Override
@@ -42,6 +44,14 @@ public class Ident extends AST {
 
 	public void setName(String something) {
 		identName = something;
+	}
+
+	public void addInstance(){
+		size++;
+	}
+
+	public int getSize(){
+		return this.size;
 	}
 
 	@Override

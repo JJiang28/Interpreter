@@ -76,7 +76,7 @@ public class CodeGeneration implements ASTVisitor {
         List<String> blockList = new ArrayList<>();
         List<Declaration> dec = block.getDecList();
         for (Declaration node: dec) {
-            symbolTable.lookup(node.getNameDef().getIdent().getName());
+            //symbolTable.lookup(node.getNameDef().getIdent().getName());
             blockList.add( node.visit(this, arg).toString());
         }
         List<Statement> state = block.getStatementList();
@@ -102,7 +102,7 @@ public class CodeGeneration implements ASTVisitor {
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
         NameDef nDef = declaration.getNameDef();
         Expr initializer = declaration.getInitializer();
-        symbolTable.lookup(nDef.getIdent().getName());
+        //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
         String initString;
         if (initializer != null) {
@@ -139,10 +139,10 @@ public class CodeGeneration implements ASTVisitor {
         Ident ident = nameDef.getIdent();
         String typeStr = typeToString(type);
         String name = ident.getName();
-        symbolTable.lookup(name);
-        return typeStr + " " + name;
+        //symbolTable.lookup(name);
+        return typeStr + " " + name + "_" + symbolTable.scope_stack.size();
      }
- 
+     
 	 public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
         return numLitExpr.getValue();
     }
@@ -160,6 +160,7 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitProgram(Program program, Object arg) throws PLCException {
+        
         Ident ident = program.getIdent();
         Type type = program.getType();
         List<NameDef> params = program.getParamList();
@@ -204,6 +205,7 @@ public class CodeGeneration implements ASTVisitor {
             importStr += imp;
         }
         code = importStr + code;
+        symbolTable.closeScope();
         return code;
      }
  
@@ -253,15 +255,15 @@ public class CodeGeneration implements ASTVisitor {
  
 	 public Object visitWhileStatement(WhileStatement whileStatement, Object arg) throws PLCException {
         String expr = whileStatement.getGuard().visit(this, arg).toString();
-        String block = whileStatement.getBlock().visit(this, arg).toString();
         symbolTable.enterScope();
+        String block = whileStatement.getBlock().visit(this, arg).toString();
+        symbolTable.closeScope();
         if(whileStatement.getGuard().getType() == Type.INT) {
             int index = expr.indexOf("?");
             expr = expr.substring(0, index);
             if (expr.charAt(0) == '(') 
                 expr = expr.substring(1);
         }
-        symbolTable.closeScope();
         String whileStr = "while (" + expr + ") {\n" +
                         block + "\n" +
                         "}";

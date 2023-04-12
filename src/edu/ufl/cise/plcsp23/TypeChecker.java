@@ -33,15 +33,19 @@ public class TypeChecker implements ASTVisitor{
         }
 
         public boolean insert(String name, NameDef desc) {
-            return (scope_stack.peek().putIfAbsent(name, desc) == null);
+            HashMap<String, NameDef> symbolTable = scope_stack.peek();
+            boolean something = (scope_stack.peek().putIfAbsent(name, desc) == null);
+            if(something == true) {
+                NameDef def = symbolTable.get(name);
+                def.getIdent().addInstance();
+            }
+            return something;
         }
 
         public NameDef lookup(String name) {
             for (int i = scope_stack.size() - 1; i >= 0; i--) {
                 HashMap<String, NameDef> symbolTable = scope_stack.get(i);
                 if(symbolTable.containsKey(name)) {
-                    NameDef def = symbolTable.get(name);
-                    def.getIdent().setName(name + "_" + i);
                     return symbolTable.get(name);
                 }
             }
