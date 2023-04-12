@@ -42,6 +42,16 @@ public class TypeChecker implements ASTVisitor{
             return something;
         }
 
+        public int findScope(String name) {
+            for (int i = scope_stack.size() - 1; i >= 0; i--) {
+                HashMap<String, NameDef> symbolTable = scope_stack.get(i);
+                if(symbolTable.containsKey(name)) {
+                    return i+1;
+                }
+            }
+            return -1; //add scope level to variable name
+        }
+
         public NameDef lookup(String name) {
             for (int i = scope_stack.size() - 1; i >= 0; i--) {
                 HashMap<String, NameDef> symbolTable = scope_stack.get(i);

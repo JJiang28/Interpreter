@@ -138,13 +138,14 @@ public class CodeGeneration implements ASTVisitor {
     }
  
 	 public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws PLCException {
-        return identExpr.getName() + "_" + symbolTable.scope_stack.size();
+        String name = identExpr.getName();
+        return name + "_" + symbolTable.findScope(name);
      }
  
 	 public Object visitLValue(LValue lValue, Object arg) throws PLCException {
         Ident ident = lValue.getIdent();
         String name = ident.getName();
-        return name + "_" + symbolTable.scope_stack.size();
+        return name + "_" + symbolTable.findScope(name);
      }
  
 	 public Object visitNameDef(NameDef nameDef, Object arg) throws PLCException {
@@ -153,7 +154,7 @@ public class CodeGeneration implements ASTVisitor {
         String typeStr = typeToString(type);
         String name = ident.getName();
         symbolTable.insert(name, nameDef);
-        return typeStr + " " + name + "_" + symbolTable.scope_stack.size();
+        return typeStr + " " + name + "_" + symbolTable.findScope(name);
      }
      
 	 public Object visitNumLitExpr(NumLitExpr numLitExpr, Object arg) throws PLCException {
