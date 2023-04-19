@@ -65,8 +65,8 @@ public class CodeGeneration implements ASTVisitor {
         if(kind == Kind.EQ){op += "==";}
         if(kind == Kind.BITOR){op += "|"; boolout = false;}
         if(kind == Kind.OR){op += "||"; boolin = true;}
-        if(kind == Kind.AND){op += "&"; boolout = false;}
-        if(kind == Kind.BITAND){op += "&&"; boolin = true;}
+        if(kind == Kind.AND){op += "&&"; boolout = false;}
+        if(kind == Kind.BITAND){op += "&"; boolin = true;}
         if(kind == Kind.EXP){
             op += "**";
             imports.add("import java.lang.Math.*;\n");
