@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="CodeGen">
+    <output-path>$PROJECT_DIR$/out/artifacts/CodeGen</output-path>
+    <root id="archive" name="CodeGen.jar">
+      <element id="dir-copy" path="$PROJECT_DIR$/src" />
+    </root>
+  </artifact>
+</component>
