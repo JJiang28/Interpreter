@@ -65,8 +65,8 @@ public class CodeGeneration implements ASTVisitor {
         if(kind == Kind.EQ){op += "==";}
         if(kind == Kind.BITOR){op += "|"; boolout = false;}
         if(kind == Kind.OR){op += "||"; boolin = true;}
-        if(kind == Kind.AND){op += "&&"; boolout = false;}
-        if(kind == Kind.BITAND){op += "&"; boolin = true;}
+        if(kind == Kind.AND){op += "&&"; boolin = true;}
+        if(kind == Kind.BITAND){op += "&"; boolout = false;}
         if(kind == Kind.EXP){
             op += "**";
             imports.add("import java.lang.Math.*;\n");
@@ -234,7 +234,9 @@ public class CodeGeneration implements ASTVisitor {
         String exprStr = expr.visit(this, arg).toString();
         if (expr.getType() != returnType) {
             if (returnType == Type.STRING) {
-                exprStr = "\"" + exprStr + "\"";
+                if (expr.getType() == Type.INT)
+                    //exprStr = "Integer.toString(" + exprStr + ")";
+                    exprStr = exprStr + " + \"\"";
             }
         }
         return "return " + exprStr + ";\n";
