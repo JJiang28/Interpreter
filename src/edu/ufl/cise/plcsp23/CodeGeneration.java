@@ -117,7 +117,7 @@ public class CodeGeneration implements ASTVisitor {
             initString = initializer.visit(this, arg).toString();
             if (nDef.getType() != initializer.getType()) {
                 if (nDef.getType() == Type.STRING) {
-                    initString = "\"" + initString + "\"";
+                    initString = initString + " + \"\"";
                 }
             }
             return nDefStr + " = " + initString + ";\n";
