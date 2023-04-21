@@ -3,6 +3,8 @@ package edu.ufl.cise.plcsp23;
 import java.util.*;
 
 import edu.ufl.cise.plcsp23.ast.*;
+import edu.ufl.cise.plcsp23.runtime.FileURLIO;
+import edu.ufl.cise.plcsp23.runtime.ImageOps;
 import edu.ufl.cise.plcsp23.IToken.Kind;
 import edu.ufl.cise.plcsp23.TypeChecker.SymbolTable;
 
@@ -22,6 +24,12 @@ public class CodeGeneration implements ASTVisitor {
             }
             case STRING -> {
                 return "String";
+            }
+            case PIXEL -> {
+                return "int";
+            }
+            case IMAGE -> {
+                return "BufferedImage";
             }
             default -> {
                 return null;
@@ -113,14 +121,29 @@ public class CodeGeneration implements ASTVisitor {
         //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
         String initString;
-        if (initializer != null) {
-            initString = initializer.visit(this, arg).toString();
-            if (nDef.getType() != initializer.getType()) {
-                if (nDef.getType() == Type.STRING) {
-                    initString = initString + " + \"\"";
+        if (nDef.getType() == Type.IMAGE) {
+            if (nDef.getDimension() == null) {
+                if (initializer == null) {
+                    throw new UnsupportedOperationException("invalid image");
+                } 
+                else if (initializer.getType() == Type.STRING) {
+                    FileURLIO.readImage(initializer.toString());
+                } 
+                else if (initializer.getType() == Type.IMAGE) {
+                    //ImageOps.cloneImage(initializer);
                 }
             }
-            return nDefStr + " = " + initString + ";\n";
+        }
+        else {
+            if (initializer != null) {
+                initString = initializer.visit(this, arg).toString();
+                if (nDef.getType() != initializer.getType()) {
+                    if (nDef.getType() == Type.STRING) {
+                        initString = initString + " + \"\"";
+                    }
+                }
+                return nDefStr + " = " + initString + ";\n";
+            }
         }
         return nDefStr + ";\n";
      }
@@ -186,7 +209,6 @@ public class CodeGeneration implements ASTVisitor {
         String typeStr = typeToString(type);
         List<String> paramStrs = new ArrayList<>();
         for (int i = 0; i < params.size(); i++) {
-            // paramStrs.add(symbolTable.getUniqueString(params.get(i).getIdent())); // TODO: see if casting works
             paramStrs.add(params.get(i).visit(this, arg).toString());
         }
         String blockStr = block.visit(this, arg).toString();
@@ -243,7 +265,7 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws PLCException {
-        String strStr = "\""+ stringLitExpr.getValue() + "\""; //TODO: look at this pls
+        String strStr = "\""+ stringLitExpr.getValue() + "\"";
         return strStr;
      }
  
@@ -251,8 +273,21 @@ public class CodeGeneration implements ASTVisitor {
         Kind oper = unaryExpr.getOp();
         String op = "";
         String expr = unaryExpr.getE().visit(this, arg).toString();
-        if (oper == Kind.BANG) op = "!";
-        if (oper == Kind.MINUS) op = "-";
+        if (oper == Kind.BANG) {
+            op = "!";
+            if (unaryExpr.getE().getType() == Type.INT) {
+                return "(" + expr + " == 0 ? 1 : 0)";
+            } 
+            else if (unaryExpr.getE().getType() == Type.STRING) {
+                return "!(" + expr + ")";
+            }
+        }
+        if (oper == Kind.MINUS) {
+            op = "-";
+            if (unaryExpr.getE().getType() == Type.INT) {
+                return "( -1 * " + expr + ")"; 
+            }
+        }
         if (oper == Kind.RES_sin) {
             op = "sin";
             imports.add("import java.lang.Math.*;\n");
@@ -298,6 +333,6 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitZExpr(ZExpr zExpr, Object arg) throws PLCException {
-        return "255"; //TODO: not sure about this one
+        return "255";
      }
 }
