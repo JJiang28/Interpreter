@@ -1,5 +1,6 @@
 package edu.ufl.cise.plcsp23;
 
+import java.awt.image.BufferedImage;
 import java.util.*;
 
 import edu.ufl.cise.plcsp23.ast.*;
@@ -80,6 +81,29 @@ public class CodeGeneration implements ASTVisitor {
             imports.add("import java.lang.Math.*;\n");
             return "(int) Math.pow(" + expr0 + ", " + expr1 + ")";
         }
+        if (binaryExpr.getLeft().getType() == Type.IMAGE) {
+            if (binaryExpr.getRight().getType() == Type.IMAGE) {
+                switch (kind) {
+                    case PLUS, MINUS, TIMES, DIV, MOD -> {
+                        return "ImageOps.binaryImageImageOp(" + op + ", " + expr0 + ", " + expr1 +");";
+                    }
+                }
+            }
+            if (binaryExpr.getRight().getType() == Type.INT) {
+                switch (kind) {
+                    case PLUS, MINUS, TIMES, DIV, MOD -> {
+                        return "ImageOps.binaryImageScalarOp(" + op + ", " + expr0 + ", " + expr1 +");";
+                    }
+                }
+            }
+            throw new UnsupportedOperationException();
+        }
+        if (binaryExpr.getLeft().getType() == Type.PIXEL) {
+            if (binaryExpr.getRight().getType() == Type.PIXEL) {
+                return "ImageOps.binaryImagePixelOp(" + op + ", " + expr0 + ", " + expr1 +");";
+            }
+            throw new UnsupportedOperationException();
+        }
         String binStr = "(" + expr0 + op + expr1 + ")";
         if (boolin)
             binStr = "((" + expr0 + " != 0) " + op + " (" + expr1 + " != 0))";
@@ -120,6 +144,7 @@ public class CodeGeneration implements ASTVisitor {
         Expr initializer = declaration.getInitializer();
         //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
+        String iString = initializer.visit(this, arg).toString();
         String initString;
         if (nDef.getType() == Type.IMAGE) {
             if (nDef.getDimension() == null) {
@@ -127,10 +152,21 @@ public class CodeGeneration implements ASTVisitor {
                     throw new UnsupportedOperationException("invalid image");
                 } 
                 else if (initializer.getType() == Type.STRING) {
-                    FileURLIO.readImage(initializer.toString());
+                    initString = "FileURLIO.readImage(" + iString + ");";
                 } 
                 else if (initializer.getType() == Type.IMAGE) {
-                    //ImageOps.cloneImage(initializer);
+                    initString = "ImageOps.cloneImage(" + iString + ");";
+                }
+            } else {
+                Dimension dim = nDef.getDimension();
+                if (initializer == null) {
+                    initString = "ImageOps.makeImage(" + dim.getWidth() + ", " + dim.getHeight() + ");";
+                }
+                else if (initializer.getType() == Type.STRING) {
+                    initString = "FileURLIO.readImage(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
+                }
+                else if (initializer.getType() == Type.IMAGE) {
+                    initString = "ImageOps.copyAndResize(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
                 }
             }
         }
@@ -307,6 +343,35 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitUnaryExprPostFix(UnaryExprPostfix unaryExprPostfix, Object arg) throws PLCException {
+        Expr primary = unaryExprPostfix.getPrimary();
+        PixelSelector pixel = unaryExprPostfix.getPixel();
+        ColorChannel color = unaryExprPostfix.getColor();
+        String primaryStr = primary.visit(this, arg).toString();
+        if (pixel != null && color == null) {
+            String x = pixel.getX().toString();
+            String y = pixel.getY().toString();
+            return "ImageOps.getRGB(" + primaryStr + ", " + x + ", " + y + ")"; 
+        }
+        if (pixel != null && color != null) {
+            String x = pixel.getX().toString();
+            String y = pixel.getY().toString();
+            String col = color.toString();
+            return "PixelOps." + col + "(ImageOps.getRGB(" + primaryStr + ", " + x + ", " + y + "))";
+        }
+        if (pixel == null && color != null) {
+            switch (color) {
+                case red -> {
+                    return "ImageOps.extractRed(" + primaryStr + ")";
+                }
+                case grn -> {
+                    return "ImageOps.extractGrn(" + primaryStr + ")";
+
+                }
+                case blu -> {
+                    return "ImageOps.extractBlu(" + primaryStr + ")";
+                }
+            }
+        }
         throw new UnsupportedOperationException();
      }
  
