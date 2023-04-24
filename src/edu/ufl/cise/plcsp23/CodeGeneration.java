@@ -83,17 +83,18 @@ public class CodeGeneration implements ASTVisitor {
             return "(int) Math.pow(" + expr0 + ", " + expr1 + ")";
         }
         if (binaryExpr.getLeft().getType() == Type.IMAGE) {
+            imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
             if (binaryExpr.getRight().getType() == Type.IMAGE) {
                 switch (kind) {
                     case PLUS, MINUS, TIMES, DIV, MOD -> {
-                        return "ImageOps.binaryImageImageOp(" + op + ", " + expr0 + ", " + expr1 +");";
+                        return "ImageOps.binaryImageImageOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
                     }
                 }
             }
             if (binaryExpr.getRight().getType() == Type.INT) {
                 switch (kind) {
                     case PLUS, MINUS, TIMES, DIV, MOD -> {
-                        return "ImageOps.binaryImageScalarOp(" + op + ", " + expr0 + ", " + expr1 +");";
+                        return "ImageOps.binaryImageScalarOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
                     }
                 }
             }
@@ -101,9 +102,12 @@ public class CodeGeneration implements ASTVisitor {
         }
         if (binaryExpr.getLeft().getType() == Type.PIXEL) {
             if (binaryExpr.getRight().getType() == Type.PIXEL) {
-                return "ImageOps.binaryImagePixelOp(" + op + ", " + expr0 + ", " + expr1 +");";
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                return "ImageOps.binaryImagePixelOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
             }
-            throw new UnsupportedOperationException();
+            imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+            return "ImageOps.binaryImagePixelOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
+            //throw new UnsupportedOperationException();
         }
         String binStr = "(" + expr0 + op + expr1 + ")";
         if (boolin)
@@ -162,21 +166,28 @@ public class CodeGeneration implements ASTVisitor {
                 }
             } else {
                 Dimension dim = nDef.getDimension();
+                String w = nDef.getDimension().getWidth().visit(this, arg).toString();
+                String h = nDef.getDimension().getHeight().visit(this, arg).toString();
                 if (initializer == null) {
                     imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-                    initString = "ImageOps.makeImage(" + dim.getWidth() + ", " + dim.getHeight() + ");";
+                    initString = "ImageOps.makeImage(" + w + ", " + h + ");";
                 }
                 else if (initializer.getType() == Type.STRING) {
                     imports.add("import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n");
-                    initString = "FileURLIO.readImage(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
+                    initString = "FileURLIO.readImage(" + iString + ", " + w + ", " + h + ");";
                 }
                 else if (initializer.getType() == Type.IMAGE) {
                     imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-                    initString = "ImageOps.copyAndResize(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
+                    initString = "ImageOps.copyAndResize(" + iString + ", " + w + ", " + h + ");";
                 }
             }
             return nDefStr + " = " + initString + ";\n";
         }
+        // else if (nDef.getType() == Type.PIXEL) {
+        //     String r = 
+        //     imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
+        //     initString = "PixelOps.pack(" + r + ", " + g + ", " + b + ");";
+        // }
         else {
             if (initializer != null) {
                 initString = initializer.visit(this, arg).toString();
@@ -196,7 +207,11 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitExpandedPixelExpr(ExpandedPixelExpr expandedPixelExpr, Object arg) throws PLCException {
-        throw new UnsupportedOperationException();
+        String r = expandedPixelExpr.getRedExpr().visit(this, arg).toString();
+        String g = expandedPixelExpr.getGrnExpr().visit(this, arg).toString();
+        String b = expandedPixelExpr.getBluExpr().visit(this, arg).toString();
+        imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
+        return "PixelOps.pack(" + r + ", " + g + ", " + b + ")";
      }
  
 	 public Object visitIdent(Ident ident, Object arg) throws PLCException {
@@ -389,7 +404,7 @@ public class CodeGeneration implements ASTVisitor {
             if (pixel == null && color != null) {
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                 imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
-                return "PixelOps." + color.toString() + "(ImageOps.getRGB(" + primaryStr + ")";
+                return "PixelOps." + color.toString() + "(" + primaryStr + ")";
             }
         }
         throw new UnsupportedOperationException();
@@ -414,6 +429,9 @@ public class CodeGeneration implements ASTVisitor {
         Expr expr = statementWrite.getE();
         String exprStr = expr.visit(this, arg).toString();
         imports.add("import edu.ufl.cise.plcsp23.runtime.ConsoleIO;\n");
+        if (expr.getType() == Type.PIXEL) {
+            return "ConsoleIO.writePixel(" + exprStr + ");\n";
+        }
         return "ConsoleIO.write(" + exprStr + ");\n";
      }
  
