@@ -146,7 +146,7 @@ public class CodeGeneration implements ASTVisitor {
         //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
         String iString = initializer.visit(this, arg).toString();
-        String initString;
+        String initString = "";
         if (nDef.getType() == Type.IMAGE) {
             if (nDef.getDimension() == null) {
                 if (initializer == null) {
@@ -175,6 +175,7 @@ public class CodeGeneration implements ASTVisitor {
                     initString = "ImageOps.copyAndResize(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
                 }
             }
+            return nDefStr + " = " + initString + ";\n";
         }
         else {
             if (initializer != null) {
