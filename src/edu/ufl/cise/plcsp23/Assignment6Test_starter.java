@@ -147,7 +147,7 @@ class Assignment6Test_starter {
 		String s = owl;
 		Object[] params = { s };
 		BufferedImage result = (BufferedImage) genCodeAndRun(input, "", params);
-		show(result);
+		//show(result);
 		BufferedImage sourceImage = FileURLIO.readImage(s);
 		BufferedImage expected = ImageOps.extractRed(sourceImage);
 		imageEquals(expected, result);
@@ -165,7 +165,7 @@ class Assignment6Test_starter {
 		String s = owl;
 		Object[] params = { s };
 		BufferedImage result = (BufferedImage) genCodeAndRun(input, "", params);
-		show(result);
+		//show(result);
 		BufferedImage sourceImage = FileURLIO.readImage(s);
 		BufferedImage imr = ImageOps.extractRed(sourceImage);
 		BufferedImage expected = ImageOps.extractBlu(imr);
@@ -211,7 +211,7 @@ class Assignment6Test_starter {
 		bluImage = ImageOps.setAllPixels(bluImage, PixelOps.pack(0, 0, 255));
 		BufferedImage expected = ImageOps.makeImage(w, h);
 		ImageOps.copyInto((ImageOps.binaryImageImageOp(ImageOps.OP.PLUS, grnImage, bluImage)), expected);
-		show(result);
+		//show(result);
 		imageEquals(expected, result);
 	}
 

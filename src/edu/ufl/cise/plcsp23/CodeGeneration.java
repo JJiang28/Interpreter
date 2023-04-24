@@ -103,10 +103,10 @@ public class CodeGeneration implements ASTVisitor {
         if (binaryExpr.getLeft().getType() == Type.PIXEL) {
             if (binaryExpr.getRight().getType() == Type.PIXEL) {
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-                return "ImageOps.binaryImagePixelOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
+                return "ImageOps.binaryPackedPixelPixelOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
             }
             imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-            return "ImageOps.binaryImagePixelOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
+            return "ImageOps.binaryPackedPixelIntOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
             //throw new UnsupportedOperationException();
         }
         String binStr = "(" + expr0 + op + expr1 + ")";
@@ -149,6 +149,8 @@ public class CodeGeneration implements ASTVisitor {
         Expr initializer = declaration.getInitializer();
         //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
+        String name = nDef.getIdent().getName();
+        name = name + "_" + symbolTable.findScope(name);
         String iString = ""; 
         if (initializer != null) {
             iString = initializer.visit(this, arg).toString();
@@ -183,6 +185,10 @@ public class CodeGeneration implements ASTVisitor {
                     imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                     initString = "ImageOps.copyAndResize(" + iString + ", " + w + ", " + h + ");";
                 }
+                else if(initializer.getType() == Type.PIXEL) {
+                    imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                    initString = "ImageOps.setAllPixels(" + "ImageOps.makeImage(" + w + ", " + h + ")" + ", " +  iString + ");"; 
+                }
             }
             return nDefStr + " = " + initString + ";\n";
         }
@@ -213,6 +219,7 @@ public class CodeGeneration implements ASTVisitor {
         String r = expandedPixelExpr.getRedExpr().visit(this, arg).toString();
         String g = expandedPixelExpr.getGrnExpr().visit(this, arg).toString();
         String b = expandedPixelExpr.getBluExpr().visit(this, arg).toString();
+        System.out.println(r + g + b);
         imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
         return "PixelOps.pack(" + r + ", " + g + ", " + b + ")";
      }
