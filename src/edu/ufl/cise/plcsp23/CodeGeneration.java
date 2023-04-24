@@ -149,7 +149,10 @@ public class CodeGeneration implements ASTVisitor {
         Expr initializer = declaration.getInitializer();
         //symbolTable.lookup(nDef.getIdent().getName());
         String nDefStr = nDef.visit(this, arg).toString();
-        String iString = initializer.visit(this, arg).toString();
+        String iString = ""; 
+        if (initializer != null) {
+            iString = initializer.visit(this, arg).toString();
+        }
         String initString = "";
         if (nDef.getType() == Type.IMAGE) {
             if (nDef.getDimension() == null) {
@@ -184,7 +187,7 @@ public class CodeGeneration implements ASTVisitor {
             return nDefStr + " = " + initString + ";\n";
         }
         // else if (nDef.getType() == Type.PIXEL) {
-        //     String r = 
+        //     String r;
         //     imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
         //     initString = "PixelOps.pack(" + r + ", " + g + ", " + b + ");";
         // }
