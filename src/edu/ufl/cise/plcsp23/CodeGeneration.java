@@ -46,8 +46,24 @@ public class CodeGeneration implements ASTVisitor {
         Expr expr = statementAssign.getE();
         Type lvType = symbolTable.lookup(LV.getIdent().getName()).getType();
         Type exprType = expr.getType();
+        System.out.println(lvType.toString());
+        System.out.println(exprType.toString());
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
+        
+        if(lvType == Type.IMAGE && exprType == Type.IMAGE) {
+            imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+            return "ImageOps.copyInto(" + exprStr + ", " + lvStr + ")" + ";\n";
+        }
+        else if (lvType == Type.IMAGE && exprType == Type.PIXEL) {
+            imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+            return "ImageOps.setAllPixels(" + lvStr + ", " + exprStr + ")" + ";\n";
+        }
+        else if (lvType == Type.IMAGE && exprType == Type.STRING) {
+            imports.add("import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n");
+            String iString = "FileURLIO.readImage(" + exprStr + ")";
+            return "ImageOps.copyInto(" + iString + ", " + lvStr + ")" + ";\n";
+        }
         if (lvType != exprType) {
             if (lvType == Type.STRING) {    
                 exprStr = "\"" + exprStr + "\"";
@@ -261,7 +277,15 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
-        throw new UnsupportedOperationException();
+        if (predeclaredVarExpr.getKind() == Kind.RES_Y) {
+            return "y";
+        }
+        else if (predeclaredVarExpr.getKind() == Kind.RES_X) {
+            return "x";
+        }
+        else {
+            throw new UnsupportedOperationException();
+        }
      }
  
 	 public Object visitProgram(Program program, Object arg) throws PLCException {
