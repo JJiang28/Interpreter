@@ -471,7 +471,7 @@ public class TypeChecker implements ASTVisitor{
     }
 
     private boolean assignmentCompatability(Type lhs, Type rhs) {
-        System.out.println(rhs + " " + lhs);
+        //System.out.println(rhs + " " + lhs);
         return (lhs == rhs || lhs == Type.IMAGE && rhs == Type.PIXEL ||
          lhs == Type.IMAGE && rhs == Type.STRING ||
          lhs == Type.PIXEL && rhs == Type.INT ||

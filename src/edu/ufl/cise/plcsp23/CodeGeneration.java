@@ -30,6 +30,7 @@ public class CodeGeneration implements ASTVisitor {
                 return "int";
             }
             case IMAGE -> {
+                imports.add("import java.awt.image.BufferedImage;\n");
                 return "BufferedImage";
             }
             default -> {
@@ -152,20 +153,25 @@ public class CodeGeneration implements ASTVisitor {
                     throw new UnsupportedOperationException("invalid image");
                 } 
                 else if (initializer.getType() == Type.STRING) {
+                    imports.add("import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n");
                     initString = "FileURLIO.readImage(" + iString + ");";
                 } 
                 else if (initializer.getType() == Type.IMAGE) {
+                    imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                     initString = "ImageOps.cloneImage(" + iString + ");";
                 }
             } else {
                 Dimension dim = nDef.getDimension();
                 if (initializer == null) {
+                    imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                     initString = "ImageOps.makeImage(" + dim.getWidth() + ", " + dim.getHeight() + ");";
                 }
                 else if (initializer.getType() == Type.STRING) {
+                    imports.add("import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n");
                     initString = "FileURLIO.readImage(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
                 }
                 else if (initializer.getType() == Type.IMAGE) {
+                    imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                     initString = "ImageOps.copyAndResize(" + iString + ", " + dim.getWidth() + ", " + dim.getHeight() + ");";
                 }
             }
@@ -347,29 +353,42 @@ public class CodeGeneration implements ASTVisitor {
         PixelSelector pixel = unaryExprPostfix.getPixel();
         ColorChannel color = unaryExprPostfix.getColor();
         String primaryStr = primary.visit(this, arg).toString();
-        if (pixel != null && color == null) {
-            String x = pixel.getX().toString();
-            String y = pixel.getY().toString();
-            return "ImageOps.getRGB(" + primaryStr + ", " + x + ", " + y + ")"; 
-        }
-        if (pixel != null && color != null) {
-            String x = pixel.getX().toString();
-            String y = pixel.getY().toString();
-            String col = color.toString();
-            return "PixelOps." + col + "(ImageOps.getRGB(" + primaryStr + ", " + x + ", " + y + "))";
-        }
-        if (pixel == null && color != null) {
-            switch (color) {
-                case red -> {
-                    return "ImageOps.extractRed(" + primaryStr + ")";
-                }
-                case grn -> {
-                    return "ImageOps.extractGrn(" + primaryStr + ")";
+        if (primary.getType() == Type.IMAGE) {
+            if (pixel != null && color == null) {
+                String x = pixel.getX().visit(this, arg).toString();
+                String y = pixel.getY().visit(this, arg).toString();
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                return "ImageOps.getRGB(" + primaryStr + ", " + x + ", " + y + ")"; 
+            }
+            if (pixel != null && color != null) {
+                String x = pixel.getX().visit(this, arg).toString();
+                String y = pixel.getY().visit(this, arg).toString();
+                String col = color.toString();
+                imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                return "PixelOps." + col + "(ImageOps.getRGB(" + primaryStr + ", " + x + ", " + y + "))";
+            }
+            if (pixel == null && color != null) {
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                switch (color) {
+                    case red -> {
+                        return "ImageOps.extractRed(" + primaryStr + ")";
+                    }
+                    case grn -> {
+                        return "ImageOps.extractGrn(" + primaryStr + ")";
 
+                    }
+                    case blu -> {
+                        return "ImageOps.extractBlu(" + primaryStr + ")";
+                    }
                 }
-                case blu -> {
-                    return "ImageOps.extractBlu(" + primaryStr + ")";
-                }
+            }
+        }
+        else if (primary.getType() == Type.PIXEL) {
+            if (pixel == null && color != null) {
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
+                return "PixelOps." + color.toString() + "(ImageOps.getRGB(" + primaryStr + ")";
             }
         }
         throw new UnsupportedOperationException();
