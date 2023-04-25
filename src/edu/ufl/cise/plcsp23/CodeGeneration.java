@@ -49,8 +49,6 @@ public class CodeGeneration implements ASTVisitor {
         Expr expr = statementAssign.getE();
         Type lvType = symbolTable.lookup(LV.getIdent().getName()).getType();
         Type exprType = expr.getType();
-        System.out.println(lvType.toString());
-        System.out.println(exprType.toString());
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
         String res = "";
@@ -75,8 +73,10 @@ public class CodeGeneration implements ASTVisitor {
                 return res;
             }
         }
-        else if (lvType == Type.IMAGE && exprType == Type.PIXEL || exprType == Type.INT) {
+        else if (lvType == Type.IMAGE && (exprType == Type.PIXEL || exprType == Type.INT)) {
             if (LV.getPixelSelector() == null && LV.getColor() == null) {
+                System.out.println(lvType);
+                System.out.println(exprType);
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                 res = "ImageOps.setAllPixels(" + lvStr + ", " + exprStr + ")" + ";\n";
                 return res;
@@ -177,6 +177,12 @@ public class CodeGeneration implements ASTVisitor {
         }
         if (binaryExpr.getLeft().getType() == Type.PIXEL) {
             if (binaryExpr.getRight().getType() == Type.PIXEL) {
+                if(kind == Kind.BITAND) {
+                    return expr0 + " & " + expr1;
+                }
+                if(kind == Kind.BITOR) {
+                    return expr0 + " | " + expr1;
+                }
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                 return "ImageOps.binaryPackedPixelPixelOp(ImageOps.OP." + kind.name() + ", " + expr0 + ", " + expr1 +")";
             }
@@ -422,9 +428,13 @@ public class CodeGeneration implements ASTVisitor {
         String exprStr = expr.visit(this, arg).toString();
         if (expr.getType() != returnType) {
             if (returnType == Type.STRING) {
-                if (expr.getType() == Type.INT)
+                if (expr.getType() == Type.INT){
                     //exprStr = "Integer.toString(" + exprStr + ")";
                     exprStr = exprStr + " + \"\"";
+                }
+                if (expr.getType() == Type.PIXEL) {
+                    exprStr = "PixelOps.packedToString(" + exprStr + ")";
+                }
             }
         }
         return "return " + exprStr + ";\n";
