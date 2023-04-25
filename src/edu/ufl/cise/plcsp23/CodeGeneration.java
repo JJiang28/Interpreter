@@ -11,6 +11,7 @@ import edu.ufl.cise.plcsp23.TypeChecker.SymbolTable;
 
 public class CodeGeneration implements ASTVisitor {
     public Set<String> imports = new HashSet<>();
+    boolean hasX, hasY;
     Type returnType;
     String all;
 
@@ -42,6 +43,8 @@ public class CodeGeneration implements ASTVisitor {
     SymbolTable symbolTable = new SymbolTable();
 
     public Object visitAssignmentStatement(AssignmentStatement statementAssign, Object arg) throws PLCException {
+        hasX = false;
+        hasY = false;
         LValue LV = statementAssign.getLv();
         Expr expr = statementAssign.getE();
         Type lvType = symbolTable.lookup(LV.getIdent().getName()).getType();
@@ -50,14 +53,47 @@ public class CodeGeneration implements ASTVisitor {
         System.out.println(exprType.toString());
         String lvStr = LV.visit(this, arg).toString();
         String exprStr = expr.visit(this, arg).toString();
+        String res = "";
+
+        if (lvType == Type.PIXEL) {
+            
+        }
         
         if(lvType == Type.IMAGE && exprType == Type.IMAGE) {
             imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-            return "ImageOps.copyInto(" + exprStr + ", " + lvStr + ")" + ";\n";
+            res = "ImageOps.copyInto(" + exprStr + ", " + lvStr + ")" + ";\n";
+            return res;
         }
         else if (lvType == Type.IMAGE && exprType == Type.PIXEL) {
-            imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-            return "ImageOps.setAllPixels(" + lvStr + ", " + exprStr + ")" + ";\n";
+            if (LV.getPixelSelector() == null && LV.getColor() == null) {
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                res = "ImageOps.setAllPixels(" + lvStr + ", " + exprStr + ")" + ";\n";
+                if (hasX & hasY) {
+                    //res = "";
+                    res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
+                    "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
+                    "\t\t" + res +
+                    "\t}\n" +
+                    "}\n";
+                }
+                return res;
+            } 
+            else if (LV.getPixelSelector() != null && LV.getColor() == null) {
+                PixelSelector pix = LV.getPixelSelector();
+                String lx = pix.getX().visit(this, arg).toString();
+                String ly = pix.getY().visit(this, arg).toString();
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                res = "ImageOps.setRGB(" + lvStr + ", " + lx + ", " + ly + ", " +
+                        exprStr + ");\n";
+                if (hasX & hasY) {
+                    res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
+                    "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
+                    "\t\t" + res +
+                    "\t}\n" +
+                    "}\n";
+                }
+                return res;
+            }
         }
         else if (lvType == Type.IMAGE && exprType == Type.STRING) {
             imports.add("import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n");
@@ -161,6 +197,8 @@ public class CodeGeneration implements ASTVisitor {
 	}
  
 	 public Object visitDeclaration(Declaration declaration, Object arg) throws PLCException {
+        hasX = false;
+        hasY = false;
         NameDef nDef = declaration.getNameDef();
         Expr initializer = declaration.getInitializer();
         //symbolTable.lookup(nDef.getIdent().getName());
@@ -206,7 +244,15 @@ public class CodeGeneration implements ASTVisitor {
                     initString = "ImageOps.setAllPixels(" + "ImageOps.makeImage(" + w + ", " + h + ")" + ", " +  iString + ");"; 
                 }
             }
-            return nDefStr + " = " + initString + ";\n";
+            nDefStr = nDefStr + " = " + initString + ";\n";
+            if (hasX && hasY) {
+                nDefStr = "for (int x = 0; x < " + name + ".getWidth(); x++) {\n" +
+                            "\tfor (int y = 0; y < " + name + ".getHeight(); y++) {\n" +
+                            "\t\t" + nDefStr +
+                            "\t}\n" +
+                            "}\n";
+            }
+            return nDefStr;
         }
         // else if (nDef.getType() == Type.PIXEL) {
         //     String r;
@@ -273,17 +319,22 @@ public class CodeGeneration implements ASTVisitor {
      }
  
 	 public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws PLCException {
-        throw new UnsupportedOperationException();
+        String x = pixelSelector.getX().visit(this, arg).toString();
+        String y = pixelSelector.getY().visit(this, arg).toString();
+        return x + ", " + y;
      }
  
 	 public Object visitPredeclaredVarExpr(PredeclaredVarExpr predeclaredVarExpr, Object arg) throws PLCException {
-        if (predeclaredVarExpr.getKind() == Kind.RES_Y) {
+        if (predeclaredVarExpr.getKind() == Kind.RES_y) {
+            hasY = true;
             return "y";
         }
-        else if (predeclaredVarExpr.getKind() == Kind.RES_X) {
+        else if (predeclaredVarExpr.getKind() == Kind.RES_x) {
+            hasX = true;
             return "x";
         }
         else {
+            System.out.println(predeclaredVarExpr.getKind());
             throw new UnsupportedOperationException();
         }
      }
