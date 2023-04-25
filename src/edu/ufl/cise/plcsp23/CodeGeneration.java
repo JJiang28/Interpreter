@@ -58,11 +58,22 @@ public class CodeGeneration implements ASTVisitor {
         if (lvType == Type.PIXEL) {
             
         }
+
+        if (lvType == Type.IMAGE && exprType == Type.STRING) {
+            if (LV.getPixelSelector() == null && LV.getColor() == null) {
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                imports.add("import edu.ufl.cise.plcsp23.runtime.FileURLIO;\n");
+                res = "ImageOps.copyInto(FileURLIO.readImage(" + exprStr + "), " + lvStr + ");\n";
+                return res;
+            }
+        }
         
-        if(lvType == Type.IMAGE && exprType == Type.IMAGE) {
-            imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
-            res = "ImageOps.copyInto(" + exprStr + ", " + lvStr + ")" + ";\n";
-            return res;
+        if (lvType == Type.IMAGE && exprType == Type.IMAGE) {
+            if (LV.getPixelSelector() == null && LV.getColor() == null) {
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                res = "ImageOps.copyInto(" + exprStr + ", " + lvStr + ")" + ";\n";
+                return res;
+            }
         }
         else if (lvType == Type.IMAGE && exprType == Type.PIXEL) {
             if (LV.getPixelSelector() == null && LV.getColor() == null) {
