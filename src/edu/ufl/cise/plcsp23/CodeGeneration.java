@@ -75,18 +75,10 @@ public class CodeGeneration implements ASTVisitor {
                 return res;
             }
         }
-        else if (lvType == Type.IMAGE && exprType == Type.PIXEL) {
+        else if (lvType == Type.IMAGE && exprType == Type.PIXEL || exprType == Type.INT) {
             if (LV.getPixelSelector() == null && LV.getColor() == null) {
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                 res = "ImageOps.setAllPixels(" + lvStr + ", " + exprStr + ")" + ";\n";
-                if (hasX & hasY) {
-                    //res = "";
-                    res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
-                    "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
-                    "\t\t" + res +
-                    "\t}\n" +
-                    "}\n";
-                }
                 return res;
             } 
             else if (LV.getPixelSelector() != null && LV.getColor() == null) {
@@ -94,6 +86,26 @@ public class CodeGeneration implements ASTVisitor {
                 String lx = pix.getX().visit(this, arg).toString();
                 String ly = pix.getY().visit(this, arg).toString();
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                res = "ImageOps.setRGB(" + lvStr + ", " + lx + ", " + ly + ", " +
+                        exprStr + ");\n";
+                if (hasX & hasY) {
+                    res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
+                    "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
+                    "\t\t" + res +
+                    "\t}\n" +
+                    "}\n";
+                }
+                return res;
+            }
+            else if (LV.getPixelSelector() != null && LV.getColor() != null) {
+                PixelSelector pix = LV.getPixelSelector();
+                ColorChannel col = LV.getColor();
+                String lx = pix.getX().visit(this, arg).toString();
+                String ly = pix.getY().visit(this, arg).toString();
+                String color = col.name();
+                color = color.substring(0, 1).toUpperCase() + color.substring(1);
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
                 res = "ImageOps.setRGB(" + lvStr + ", " + lx + ", " + ly + ", " +
                         exprStr + ");\n";
                 if (hasX & hasY) {
