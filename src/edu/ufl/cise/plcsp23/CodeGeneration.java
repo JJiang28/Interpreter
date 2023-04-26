@@ -53,10 +53,6 @@ public class CodeGeneration implements ASTVisitor {
         String exprStr = expr.visit(this, arg).toString();
         String res = "";
 
-        if (lvType == Type.PIXEL) {
-            
-        }
-
         if (lvType == Type.IMAGE && exprType == Type.STRING) {
             if (LV.getPixelSelector() == null && LV.getColor() == null) {
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
@@ -115,6 +111,21 @@ public class CodeGeneration implements ASTVisitor {
                     "\t}\n" +
                     "}\n";
                 }
+                return res;
+            }
+            else if(LV.getPixelSelector() == null && LV.getColor() != null) {
+                ColorChannel col = LV.getColor();
+                String color = col.name();
+                color = color.substring(0, 1).toUpperCase() + color.substring(1);
+                imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
+                imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
+                res = "ImageOps.setRGB(" + lvStr + ", " + "x" + ", " + "y" + ", " +
+                        exprStr + ");\n";
+                res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
+                "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
+                "\t\t" + res +
+                "\t}\n" +
+                "}\n";
                 return res;
             }
         }
