@@ -1962,6 +1962,9 @@ class Assignment6Test_starter {
     }
 }
 
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes

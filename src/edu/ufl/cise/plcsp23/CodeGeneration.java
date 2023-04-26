@@ -53,6 +53,13 @@ public class CodeGeneration implements ASTVisitor {
         String exprStr = expr.visit(this, arg).toString();
         String res = "";
 
+<<<<<<< Updated upstream
+=======
+        if (lvType == Type.PIXEL) {
+            //throw new UnsupportedOperationException();
+        }
+
+>>>>>>> Stashed changes
         if (lvType == Type.IMAGE && exprType == Type.STRING) {
             if (LV.getPixelSelector() == null && LV.getColor() == null) {
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
@@ -90,6 +97,14 @@ public class CodeGeneration implements ASTVisitor {
                     "\t\t" + res +
                     "\t}\n" +
                     "}\n";
+                } if (hasX & !hasY) {
+                    res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
+                    "\t" + res +
+                    "}\n";
+                } if (!hasX & hasY) {
+                    res = "for (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
+                    "\t" + res +
+                    "}\n";
                 }
                 return res;
             }
@@ -109,6 +124,14 @@ public class CodeGeneration implements ASTVisitor {
                     "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
                     "\t\t" + res +
                     "\t}\n" +
+                    "}\n";
+                } if (hasX & !hasY) {
+                    res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
+                    "\t" + res +
+                    "}\n";
+                } if (!hasX & hasY) {
+                    res = "for (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
+                    "\t" + res +
                     "}\n";
                 }
                 return res;
@@ -290,6 +313,14 @@ public class CodeGeneration implements ASTVisitor {
                             "\tfor (int y = 0; y < " + name + ".getHeight(); y++) {\n" +
                             "\t\t" + nDefStr +
                             "\t}\n" +
+                            "}\n";
+            } else if (hasX && !hasY) {
+                nDefStr = "for (int x = 0; x < " + name + ".getWidth(); x++) {\n" +
+                            "\t" + nDefStr +
+                            "}\n";
+            } else if (!hasX && hasY) {
+                nDefStr = "for (int y = 0; y < " + name + ".getHeight(); y++) {\n" +
+                            "\t" + nDefStr +
                             "}\n";
             }
             return nDefStr;
