@@ -53,13 +53,6 @@ public class CodeGeneration implements ASTVisitor {
         String exprStr = expr.visit(this, arg).toString();
         String res = "";
 
-<<<<<<< Updated upstream
-=======
-        if (lvType == Type.PIXEL) {
-            //throw new UnsupportedOperationException();
-        }
-
->>>>>>> Stashed changes
         if (lvType == Type.IMAGE && exprType == Type.STRING) {
             if (LV.getPixelSelector() == null && LV.getColor() == null) {
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
@@ -113,12 +106,11 @@ public class CodeGeneration implements ASTVisitor {
                 ColorChannel col = LV.getColor();
                 String lx = pix.getX().visit(this, arg).toString();
                 String ly = pix.getY().visit(this, arg).toString();
-                String color = col.name();
+                String color = col.name().substring(0, 1) + col.name().substring(1);
                 color = color.substring(0, 1).toUpperCase() + color.substring(1);
                 imports.add("import edu.ufl.cise.plcsp23.runtime.ImageOps;\n");
                 imports.add("import edu.ufl.cise.plcsp23.runtime.PixelOps;\n");
-                res = "ImageOps.setRGB(" + lvStr + ", " + lx + ", " + ly + ", " +
-                        exprStr + ");\n";
+                res = "ImageOps.setRGB(" + lvStr + ", " + lx + ", " + ly + ", PixelOps.set" + color + "(ImageOps.getRGB(" + lvStr + ", " + lx + ", " + ly + "), " + exprStr + "));\n";
                 if (hasX & hasY) {
                     res = "for (int x = 0; x < " + lvStr + ".getWidth(); x++) {\n" +
                     "\tfor (int y = 0; y < " + lvStr + ".getHeight(); y++) {\n" +
