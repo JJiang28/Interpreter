@@ -1,2 +1,2 @@
 # Interpreter
-COP4020 Programming Language Concepts
+Building an Interpreter for Java using Java
